@@ -32,8 +32,7 @@ body{
   position:fixed;inset:0;width:100%;max-width:480px;margin:0 auto;
   display:flex;flex-direction:column;
 }
-.screen{display:none;flex-direction:column;overflow-y:auto;padding:16px;gap:12px}
-.screen.active{display:flex;flex:1}
+.screen{display:none;flex-direction:column;overflow-y:auto;padding:16px;gap:12px;flex:1}
 .screen.active{display:flex}
 .screen::-webkit-scrollbar{width:4px}
 .screen::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
@@ -381,6 +380,31 @@ body{
 .conn-status.disconnected{color:var(--red);background:rgba(239,68,68,.1)}
 .conn-status.connecting{color:var(--gold);background:rgba(245,158,11,.1)}
 
+/* Weather badge */
+.weather-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--surface);border:1px solid var(--border)}
+.weather-badge .wb-icon{font-size:14px}
+
+/* Items */
+.items-row{display:flex;gap:6px;flex-wrap:wrap;min-height:28px;align-items:center;justify-content:center;padding:2px 0}
+.item-chip{background:var(--surface);border:1px solid var(--gold);border-radius:6px;padding:2px 8px;font-size:11px;display:flex;align-items:center;gap:4px;animation:popItem .4s ease;cursor:pointer;transition:all .2s}
+.item-chip:hover{background:rgba(245,158,11,.15)}
+.item-chip .ic-icon{font-size:16px}
+.item-chip .ic-label{font-weight:600;font-size:10px}
+.item-chip .ic-count{background:var(--gold);color:#000;border-radius:50%;width:16px;height:16px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.item-chip.used{opacity:.5;border-color:var(--muted)}
+@keyframes popItem{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+/* Item pickup toast */
+.item-toast{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--surface);border:2px solid var(--gold);border-radius:var(--radius);padding:16px 24px;text-align:center;z-index:1000;animation:fadeInOut 2s ease forwards;pointer-events:none}
+.item-toast .it-icon{font-size:40px;display:block}
+.item-toast .it-label{font-size:14px;font-weight:700;margin-top:4px;color:var(--gold)}
+.item-toast .it-desc{font-size:11px;color:var(--muted);margin-top:2px}
+@keyframes fadeInOut{0%{opacity:0;transform:translate(-50%,-50%) scale(.8)}15%{opacity:1;transform:translate(-50%,-50%) scale(1)}70%{opacity:1}100%{opacity:0;transform:translate(-50%,-50%) scale(.8)}}
+
+/* PB record flash */
+.pb-flash{color:var(--gold);font-weight:800;font-size:13px;animation:pulsePb 1s ease-in-out infinite}
+@keyframes pulsePb{0%,100%{opacity:1}50%{opacity:.5}}
+
 @media(max-height:700px){
   #screen-home{padding-top:20px;gap:12px}
   #screen-home .logo{font-size:48px}
@@ -425,6 +449,7 @@ body{
       <div class="title">🏃 Le Dé du <span>Coureur</span></div>
       <div class="info" id="race-info"></div>
     </div>
+    <span class="weather-badge" id="weather-badge"></span>
     <div style="display:flex;align-items:center;gap:6px">
       <span class="conn-status disconnected" id="conn-status">Déconnecté</span>
       <button class="btn-quit" id="btn-quit">✕</button>
@@ -483,6 +508,8 @@ body{
       <span class="ct-label" id="ct-label">4</span>
     </button>
   </div>
+
+  <div class="items-row" id="items-row"></div>
 
   <div class="event-card" id="event-card">
     <span class="e-emoji" id="e-emoji">🎲</span>
@@ -592,7 +619,11 @@ const DATA = {
         { name:'Faux plat', emoji:'😮‍💨', desc:'Une légère montée !', time:-10, energy:-3 },
         { name:'Rien à signaler', emoji:'😐', desc:'Kilomètre tranquille', time:0, energy:0 },
         { name:'Descente', emoji:'⛰️', desc:'Ça glisse tout seul !', time:20, energy:3 },
-        { name:'Runner\'s High', emoji:'🕊️', desc:'Nuage d\'euphorie !', time:30, energy:5 }
+        { name:'Runner\'s High', emoji:'🕊️', desc:'Nuage d\'euphorie !', time:30, energy:5 },
+        { name:'Canicule', emoji:'🌡️', desc:'Chaleur accablante !', time:-20, energy:-6 },
+        { name:'Pigeon voleur', emoji:'🐦', desc:'Un pigeon te vole ton gel !', time:-10, energy:-3 },
+        { name:'Bords de Seine', emoji:'🏛️', desc:'Vue magnifique sur Paris', time:15, energy:4 },
+        { name:'Foule en délire', emoji:'🎉', desc:'Les spectateurs te portent !', time:25, energy:8 }
       ]
     },
     sanfran: {
@@ -603,7 +634,11 @@ const DATA = {
         { name:'Côte raide', emoji:'🏔️', desc:'Une pente à 20% !', time:-25, energy:-10 },
         { name:'Point de vue', emoji:'🌅', desc:'Vue magnifique !', time:10, energy:5 },
         { name:'Descente sur SF', emoji:'🎢', desc:'Descente vertigineuse', time:25, energy:4 },
-        { name:'Golden Gate', emoji:'🌉', desc:'L\'énergie du pont !', time:20, energy:8 }
+        { name:'Golden Gate', emoji:'🌉', desc:'L\'énergie du pont !', time:20, energy:8 },
+        { name:'Brouillard', emoji:'🌁', desc:'Visibilité réduite !', time:-20, energy:-6 },
+        { name:'Tramway', emoji:'🚋', desc:'Faut attendre au croisement', time:-15, energy:-2 },
+        { name:'Phôques', emoji:'🦭', desc:'Des phoques sur les rochers !', time:15, energy:5 },
+        { name:'Painted Ladies', emoji:'🏠', desc:'Les maisons victoriennes !', time:25, energy:8 }
       ]
     },
     nairobi: {
@@ -614,7 +649,11 @@ const DATA = {
         { name:'Montée difficile', emoji:'⛰️', desc:'Ça pique !', time:-30, energy:-12 },
         { name:'Faune sauvage', emoji:'🦒', desc:'Des girafes !', time:15, energy:6 },
         { name:'Descente technique', emoji:'🏞️', desc:'Prudence mais rapide', time:20, energy:3 },
-        { name:'Aigle guide', emoji:'🦅', desc:'Porté par l\'aigle !', time:35, energy:6 }
+        { name:'Aigle guide', emoji:'🦅', desc:'Porté par l\'aigle !', time:35, energy:6 },
+        { name:'Boue rouge', emoji:'🟤', desc:'Terrain glissant !', time:-20, energy:-8 },
+        { name:'Rift Valley', emoji:'🏜️', desc:'Vue à couper le souffle', time:20, energy:6 },
+        { name:'Guépard', emoji:'🐆', desc:'Un guépard traverse la piste !', time:-15, energy:-5 },
+        { name:'Savane dorée', emoji:'🌅', desc:'Coucher de soleil magnifique', time:25, energy:10 }
       ]
     },
     tokyo: {
@@ -625,7 +664,11 @@ const DATA = {
         { name:'Ruelle étroite', emoji:'🏮', desc:'Détour imprévu', time:-10, energy:-2 },
         { name:'Cerisiers en fleurs', emoji:'🌸', desc:'Moment de grâce', time:15, energy:6 },
         { name:'Ravitaillement', emoji:'🍜', desc:'Un bol de nouilles !', time:10, energy:10 },
-        { name:'Lièvre local', emoji:'🏃‍♂️', desc:'Un coureur t\'emmène !', time:30, energy:4 }
+        { name:'Lièvre local', emoji:'🏃‍♂️', desc:'Un coureur t\'emmène !', time:30, energy:4 },
+        { name:'Foule dense', emoji:'🚶', desc:'Shibuya bondé !', time:-20, energy:-6 },
+        { name:'Konbini', emoji:'🏪', desc:'Achat de boisson fraîche', time:10, energy:12 },
+        { name:'Temple zen', emoji:'⛩️', desc:'Moment de paix intérieure', time:20, energy:6 },
+        { name:'Karaoké géant', emoji:'🎤', desc:'La foule chante pour toi !', time:30, energy:5 }
       ]
     }
   },
@@ -640,7 +683,20 @@ const DATA = {
     const base = costs[distanceId];
     const mult = this.difficulties.find(d=>d.id===difficultyId).energyMult;
     return +(base * mult).toFixed(1);
-  }
+  },
+  weathers: [
+    { id:'sunny',  label:'Ensoleillé',      icon:'☀️', badMult:1.0, goodMult:1.0, energyCostMult:1.0 },
+    { id:'rain',   label:'Pluvieux',        icon:'🌧️', badMult:1.4, goodMult:0.7, energyCostMult:1.2 },
+    { id:'wind',   label:'Vent contraire',  icon:'💨', badMult:1.3, goodMult:0.8, energyCostMult:1.0 },
+    { id:'heat',   label:'Canicule',        icon:'🔥', badMult:1.2, goodMult:1.0, energyCostMult:1.3 },
+    { id:'perfect',label:'Parfait',         icon:'🌈', badMult:0.6, goodMult:1.4, energyCostMult:0.8 }
+  ],
+  items: [
+    { id:'gel',     name:'Gel énergétique',  icon:'🧃', effect:'energy', value:20, desc:'+20 ⚡' },
+    { id:'shoes',   name:'Super running',    icon:'👟', effect:'time',   value:30, desc:'+30s au prochain km' },
+    { id:'cap',     name:'Casquette magique',icon:'🧢', effect:'shield', value:1,  desc:'Bloque 1 mauvais événement' },
+    { id:'watch',   name:'Montre GPS',       icon:'⌚', effect:'pace',   value:0.9, desc:'Allure boostée (x0.9)' }
+  ]
 };
 
 // ====== GAME STATE ======
@@ -657,17 +713,28 @@ const G = {
   phase:'roll',
   selectedEffort:'normal',
   isRolling:false,
-  finished:false
+  finished:false,
+  weatherId:null,
+  items:[],
+  lastEventBad:false,
+  chainBad:false,
+  chainFuel: false,
+  pb:null,
+  isNewRecord:false,
+  splits:[]
 };
 
 function resetGame(){
   if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null;}
   G.km=0; G.totalTime=0; G.energy=100; G.history=[];
   G.phase='ready'; G.isRolling=false; G.finished=false;
+  G.items=[]; G.lastEventBad=false; G.chainBad=false; G.chainFuel=false;
+  G.pb=null; G.isNewRecord=false; G.splits=[];
   document.getElementById('event-card').classList.remove('show');
   document.getElementById('journal').innerHTML='';
   document.getElementById('btn-dice').className='btn-dice ready';
   document.getElementById('btn-dice').disabled=false;
+  document.getElementById('items-row').innerHTML='';
   const face=document.getElementById('btn-dice').querySelector('.dice-face');
   face.textContent='🎲';
   document.getElementById('ct-label').classList.add('hidden');
@@ -770,7 +837,17 @@ function startRace(){
   resetGame();
   const dist=DATA.distances.find(d=>d.id===G.distanceId);
   G.totalKm=dist.km;
+  // Weather (random solo, deterministic multi)
+  const ws=DATA.weathers;
+  if(MP.mode==='multi' && MP.roomCode){
+    const seed=MP.roomCode.split('').reduce((s,c)=>s+c.charCodeAt(0),0);
+    G.weatherId=ws[seed%ws.length].id;
+  } else {
+    G.weatherId=ws[Math.floor(Math.random()*ws.length)].id;
+  }
+  G.pb=getPB();
   showScreen('race');
+  renderWeather();
   updateRaceUI();
   document.getElementById('race-info').textContent=
     `${dist.label} · ${DATA.cities[G.cityId].name} · ${DATA.difficulties.find(d=>d.id===G.difficultyId).label}`;
@@ -780,6 +857,41 @@ function startRace(){
   document.getElementById('e-name').textContent='Prêt ?';
   document.getElementById('e-desc').textContent='Choisis ton effort et lance le dé !';
   document.getElementById('e-effects').innerHTML='';
+}
+
+function renderWeather(){
+  const w=DATA.weathers.find(w=>w.id===G.weatherId);
+  if(!w)return;
+  document.getElementById('weather-badge').innerHTML=
+    `<span class="wb-icon">${w.icon}</span> ${w.label}`;
+}
+
+function renderItems(){
+  const el=document.getElementById('items-row');
+  if(!G.items.length){el.innerHTML='';return;}
+  const counts={};
+  G.items.forEach(i=>{counts[i.id]=(counts[i.id]||0)+1;});
+  el.innerHTML=Object.entries(counts).map(([id,cnt])=>{
+    const item=DATA.items.find(i=>i.id===id);
+    if(!item)return '';
+    return `<div class="item-chip" data-item="${id}">
+      <span class="ic-icon">${item.icon}</span>
+      <span class="ic-label">${item.name}</span>
+      ${cnt>1?`<span class="ic-count">${cnt}</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+function showItemPickup(itemId){
+  const item=DATA.items.find(i=>i.id===itemId);
+  if(!item)return;
+  const toast=document.createElement('div');
+  toast.className='item-toast';
+  toast.innerHTML=`<span class="it-icon">${item.icon}</span>
+    <span class="it-label">${item.name} !</span>
+    <span class="it-desc">${item.desc}</span>`;
+  document.body.appendChild(toast);
+  setTimeout(()=>toast.remove(),2200);
 }
 
 // ====== RACE UI UPDATE ======
@@ -901,8 +1013,27 @@ async function onRollDice(){
   clearInterval(cycleInterval);
 
   // Actual roll
-  const diceVal=rollD6();
+  let diceVal=rollD6();
   const cityEvents=DATA.cities[G.cityId].events;
+
+  // Apply watch item effect: boost dice
+  const watchIdx=G.items.findIndex(i=>i.id==='watch');
+  if(watchIdx>=0){
+    diceVal=Math.min(6,diceVal+1);
+    G.items.splice(watchIdx,1);
+  }
+
+  // Apply shield: if bad roll, re-roll once
+  const shieldIdx=G.items.findIndex(i=>i.id==='cap');
+  let shieldUsed=false;
+  const rollIdx=diceVal-1;
+  const isBadEvent=cityEvents[rollIdx].time<0;
+  if(isBadEvent && shieldIdx>=0){
+    diceVal=rollD6();
+    G.items.splice(shieldIdx,1);
+    shieldUsed=true;
+  }
+
   const event=cityEvents[diceVal-1];
 
   btn.classList.remove('rolling');
@@ -918,18 +1049,68 @@ async function onRollDice(){
   let tEff=Math.round(event.time * pushMult);
   let eEff=Math.round(event.energy * effortMult.energy);
 
+  // Weather effect
+  const w=DATA.weathers.find(w=>w.id===G.weatherId);
+  if(w){
+    const wm=tEff>=0? w.goodMult : w.badMult;
+    tEff=Math.round(tEff*wm);
+    eEff=Math.round(eEff*(tEff>=0? w.goodMult : w.badMult));
+  }
+
+  // Apply shoes item
+  const shoesIdx=G.items.findIndex(i=>i.id==='shoes');
+  if(shoesIdx>=0){
+    tEff+=30;
+    G.items.splice(shoesIdx,1);
+  }
+
+  // Chained events
+  let chainMsg='';
+  if(G.lastEventBad && G.selectedEffort==='push'){
+    // Pushing after a bad event aggravates
+    const penalty=Math.round(tEff<0? tEff*1.5 : -15);
+    tEff+=penalty;
+    chainMsg='⚠️ Blessure aggravée !';
+  }
+  if(G.lastEventBad===false && G.selectedEffort==='conserve' && event.time>0){
+    // Conserving after a good event amplifies
+    tEff=Math.round(tEff*1.3);
+    chainMsg='✨ Élan préservé !';
+  }
+
+  G.lastEventBad=event.time<0;
+
   // Fatigue penalty
   const basePace=DATA.difficulties.find(d=>d.id===G.difficultyId).pace[G.distanceId];
   const fatigue=G.energy<50? Math.floor((50-Math.max(G.energy,0))/10)*2 : 0;
-  const pace=Math.max(180, basePace + tEff + fatigue);
+  let pace=Math.max(180, basePace + tEff + fatigue);
+
+  // Apply watch pace bonus
+  // (already applied above as dice boost)
+
+  // Energy cost with weather multiplier
+  let energyCost=DATA.getEnergyCost(G.distanceId,G.difficultyId);
+  if(w) energyCost*=w.energyCostMult;
+
+  // Apply gel item
+  let gelUsed=false;
+  const gelIdx=G.items.findIndex(i=>i.id==='gel');
+  if(gelIdx>=0 && G.energy<60){
+    G.energy=Math.min(100,G.energy+20);
+    G.items.splice(gelIdx,1);
+    gelUsed=true;
+  }
 
   // Apply
   const prevTime=G.totalTime;
   G.km++;
   G.totalTime+=pace;
-  G.energy=Math.max(0,Math.min(100, G.energy - DATA.getEnergyCost(G.distanceId,G.difficultyId) + eEff));
+  G.energy=Math.max(0,Math.min(100, G.energy - Math.round(energyCost) + eEff));
 
-  G.history.push({km:G.km,event,timeEffect:tEff,energyEffect:eEff,pace,fatigue});
+  // Record split
+  G.splits.push({km:G.km, time:G.totalTime, pace, event:event.name});
+
+  G.history.push({km:G.km,event,timeEffect:tEff,energyEffect:eEff,pace,fatigue,chainMsg,shieldUsed,gelUsed});
 
   // Update UI after a beat
   await new Promise(r=>setTimeout(r,400));
@@ -937,8 +1118,8 @@ async function onRollDice(){
   // Show event card
   const ec=document.getElementById('event-card');
   document.getElementById('e-emoji').textContent=event.emoji;
-  document.getElementById('e-name').textContent=event.name;
-  document.getElementById('e-desc').textContent=event.desc;
+  document.getElementById('e-name').textContent=event.name+(shieldUsed?' 🛡️':'');
+  document.getElementById('e-desc').textContent=event.desc+(gelUsed?' 🧃':'');
   const effEl=document.getElementById('e-effects');
   effEl.innerHTML='';
   const teC=tEff>=0?'good':'bad';
@@ -953,6 +1134,13 @@ async function onRollDice(){
   if(fatigue>0){
     effEl.innerHTML+=`<span class="e-effect bad">-${fatigue}s (fatigue)</span>`;
   }
+  if(chainMsg){
+    effEl.innerHTML+=`<span class="e-effect neutral">${chainMsg}</span>`;
+  }
+  // Weather display in event
+  if(w){
+    effEl.innerHTML+=`<span class="e-effect neutral">${w.icon}</span>`;
+  }
   ec.classList.remove('show');
   // Force reflow to restart animation
   void ec.offsetWidth;
@@ -962,6 +1150,16 @@ async function onRollDice(){
   updateRoad();
 
   addJournalEntry(G.km,event.name,event.emoji,tEff,G.km===1);
+
+  // Random item drop (20% chance)
+  if(Math.random()<.2 && G.items.length<4){
+    const itemPool=DATA.items;
+    const randItem=itemPool[Math.floor(Math.random()*itemPool.length)];
+    G.items.push({id:randItem.id});
+    showItemPickup(randItem.id);
+    renderItems();
+  }
+  renderItems();
 
   // Check finish
   if(G.km>=G.totalKm){
@@ -977,12 +1175,34 @@ async function onRollDice(){
   startCountdown();
 }
 
+// ====== PERSONAL RECORDS ======
+function pbKey(){
+  return `pb_${G.distanceId}_${G.cityId}_${G.difficultyId}`;
+}
+function getPB(){
+  const v=localStorage.getItem(pbKey());
+  return v? parseInt(v) : null;
+}
+function savePB(time){
+  const key=pbKey();
+  const prev=getPB();
+  if(prev===null || time<prev){
+    localStorage.setItem(key,time.toString());
+    return true; // new record
+  }
+  return false;
+}
+
 // ====== FINISH SCREEN ======
 function showFinish(){
   showScreen('finish');
   const dist=DATA.distances.find(d=>d.id===G.distanceId);
   const city=DATA.cities[G.cityId];
   const diff=DATA.difficulties.find(d=>d.id===G.difficultyId);
+
+  G.isNewRecord=savePB(G.totalTime);
+
+  const pbTime=getPB();
 
   document.getElementById('finish-sub').textContent=`${dist.label} · ${city.name} · ${diff.label}`;
   document.getElementById('finish-time').textContent=fmtTime(G.totalTime);
@@ -991,6 +1211,7 @@ function showFinish(){
   const avgPace=G.totalKm>0? G.totalTime/G.totalKm : 0;
   const bestEvent=G.history.reduce((a,b)=>b.timeEffect>a.timeEffect?b:a,{timeEffect:-999});
   const worstEvent=G.history.reduce((a,b)=>b.timeEffect<a.timeEffect?b:a,{timeEffect:999});
+  const w=DATA.weathers.find(w=>w.id===G.weatherId);
   document.getElementById('finish-stats').innerHTML=`
     <div class="finish-stat">
       <div class="fs-val">${fmtPace(avgPace)}</div>
@@ -1008,11 +1229,26 @@ function showFinish(){
       <div class="fs-val" style="color:var(--red)">${worstEvent.timeEffect<0?worstEvent.timeEffect:'—'}</div>
       <div class="fs-lbl">Pire jet</div>
     </div>
+    ${w?`<div class="finish-stat">
+      <div class="fs-val">${w.icon}</div>
+      <div class="fs-lbl">Météo : ${w.label}</div>
+    </div>`:''}
+    ${pbTime!==null?`<div class="finish-stat">
+      <div class="fs-val">${G.isNewRecord?'🏆':fmtTime(pbTime)}</div>
+      <div class="fs-lbl">${G.isNewRecord?'Nouveau record !':'Record personnel'}</div>
+    </div>`:''}
   `;
 
   // Breakdown
   const bd=document.getElementById('finish-breakdown');
-  bd.innerHTML=G.history.map(h=>`
+  bd.innerHTML=G.splits.length?
+    G.splits.map(s=>`
+    <div class="fb-row">
+      <span class="fb-km">Km ${s.km}</span>
+      <span class="fb-event">${s.event||'—'}</span>
+      <span class="fb-pace">${fmtTime(s.time)} · ${fmtPace(s.pace)}</span>
+    </div>
+  `).join('') : G.history.map(h=>`
     <div class="fb-row">
       <span class="fb-km">Km ${h.km}</span>
       <span class="fb-event">${h.event.emoji} ${h.event.name}</span>
