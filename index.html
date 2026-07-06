@@ -27,10 +27,9 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
   background:var(--bg);color:var(--text);line-height:1.4;
   -webkit-font-smoothing:antialiased;
-  display:flex;justify-content:center;
 }
 #app{
-  width:100%;max-width:480px;height:100%;
+  position:fixed;inset:0;width:100%;max-width:480px;margin:0 auto;
   display:flex;flex-direction:column;
 }
 .screen{display:none;flex-direction:column;overflow-y:auto;padding:16px;gap:12px}
