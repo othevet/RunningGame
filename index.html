@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Le Dé du Coureur</title>
+<script src="/socket.io/socket.io.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d17;
+  --surface:#14172d;
+  --surface2:#1c2042;
+  --border:#2a2f5a;
+  --text:#e8eaf0;
+  --muted:#7c82a8;
+  --gold:#f59e0b;
+  --blue:#3b82f6;
+  --green:#22c55e;
+  --red:#ef4444;
+  --orange:#f97316;
+  --radius:12px;
+  --radius-sm:8px;
+}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.4;
+  -webkit-font-smoothing:antialiased;
+  display:flex;justify-content:center;
+}
+#app{
+  width:100%;max-width:480px;height:100svh;height:100dvh;
+  display:flex;flex-direction:column;
+  position:relative;overflow:hidden;
+}
+.screen{display:none;flex-direction:column;height:100%;overflow-y:auto;padding:16px;gap:12px}
+.screen.active{display:flex}
+.screen::-webkit-scrollbar{width:4px}
+.screen::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ====== SELECT SCREEN ====== */
+#screen-select{align-items:center;text-align:center;padding-top:24px;gap:16px}
+#screen-select .logo{font-size:48px;margin-top:8px}
+#screen-select h1{
+  font-size:28px;font-weight:800;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+#screen-select .subtitle{color:var(--muted);font-size:14px;margin-top:-8px}
+.sel-section{width:100%;text-align:left}
+.sel-section label{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.card-row{display:flex;gap:8px;flex-wrap:wrap}
+.card-row .card{flex:1;min-width:72px}
+.card{
+  background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);
+  padding:10px 8px;text-align:center;cursor:pointer;transition:all .2s;
+  user-select:none;-webkit-tap-highlight-color:transparent;
+}
+.card:hover{border-color:var(--muted)}
+.card.selected{border-color:var(--gold);background:linear-gradient(135deg,#1e1b0e,#1a1d2e);box-shadow:0 0 20px rgba(245,158,11,.15)}
+.card .icon{font-size:22px;display:block}
+.card .name{font-size:13px;font-weight:600;margin-top:4px}
+.card .detail{font-size:11px;color:var(--muted);margin-top:2px}
+.btn-start{
+  width:100%;padding:16px;border:none;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  color:#000;font-size:18px;font-weight:700;cursor:pointer;margin-top:8px;
+  transition:opacity .2s,transform .15s;
+}
+.btn-start:disabled{opacity:.4;cursor:not-allowed}
+.btn-start:not(:disabled):active{transform:scale(.97)}
+
+/* ====== RACE SCREEN ====== */
+#screen-race{padding:12px 16px;gap:8px}
+
+.race-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:4px}
+.race-header .title{font-size:16px;font-weight:700}
+.race-header .title span{color:var(--gold)}
+.race-header .info{font-size:11px;color:var(--muted)}
+.btn-quit{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:4px 10px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer}
+
+.stats-bar{
+  display:flex;gap:12px;align-items:center;
+  background:var(--surface);border-radius:var(--radius);padding:10px 14px;
+  border:1px solid var(--border);
+}
+.stat-item{display:flex;flex-direction:column;align-items:center;gap:2px}
+.stat-item .val{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;min-width:3ch}
+.stat-item .val.time{font-size:16px}
+.stat-item .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.stat-spacer{flex:1}
+.energy-wrap{display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+.energy-bar-bg{
+  width:80px;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;
+}
+.energy-bar-fill{
+  height:100%;border-radius:4px;transition:width .6s ease,background .6s ease;
+  background:var(--green);
+}
+.energy-label{font-size:10px;color:var(--muted);font-weight:600}
+
+/* Road */
+.road-wrap{
+  background:var(--surface);border-radius:var(--radius);padding:16px 12px 12px;
+  border:1px solid var(--border);position:relative;overflow:hidden;
+}
+.road{
+  height:40px;background:#1a1d2e;border-radius:6px;position:relative;overflow:hidden;
+  border:1px solid var(--border);
+}
+.road-markings{
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,
+    rgba(255,255,255,.12) 0px,rgba(255,255,255,.12) 12px,
+    transparent 12px,transparent 24px
+  );
+  animation:scrollRoad .8s linear infinite;
+}
+@keyframes scrollRoad{to{transform:translateX(-24px)}}
+
+.road .runner{
+  position:absolute;top:50%;transform:translateY(-50%);font-size:26px;
+  transition:left .8s cubic-bezier(.34,1.56,.64,1);z-index:2;
+  left:8px;
+}
+.road .start-flag{position:absolute;left:4px;top:50%;transform:translateY(-50%);font-size:14px;opacity:.6}
+.road .finish-flag{position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:14px}
+.road-progress{
+  margin-top:8px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);
+}
+.road-progress .km-progress{font-weight:600;color:var(--text)}
+
+/* Effort selector */
+.effort-wrap{
+  display:flex;gap:6px;width:100%;
+  background:var(--surface);border-radius:var(--radius);padding:6px;
+  border:1px solid var(--border);
+}
+.btn-effort{
+  flex:1;text-align:center;padding:8px 4px;border-radius:var(--radius-sm);
+  border:2px solid transparent;background:transparent;color:var(--muted);
+  font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.btn-effort .e-icon{font-size:16px;display:block;margin-bottom:2px}
+.btn-effort:hover{color:var(--text);background:var(--surface2)}
+.btn-effort.selected{
+  border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,.1);
+}
+
+/* Dice area */
+.dice-area{display:flex;flex-direction:column;align-items:center;gap:8px;padding:4px 0}
+.btn-dice{
+  width:100px;height:100px;border-radius:20px;border:3px solid var(--border);
+  background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .2s;user-select:none;
+  position:relative;
+}
+.btn-dice:hover:not(:disabled){border-color:var(--gold);transform:translateY(-2px);box-shadow:0 8px 30px rgba(245,158,11,.15)}
+.btn-dice:active:not(:disabled){transform:scale(.95)}
+.btn-dice:disabled{opacity:.5;cursor:not-allowed}
+.btn-dice .dice-face{font-size:42px;transition:transform .15s}
+.btn-dice .dice-label{font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+.btn-dice.rolling .dice-face{animation:shakeDice .1s infinite}
+@keyframes shakeDice{0%,100%{transform:rotate(-8deg) scale(1.1)}50%{transform:rotate(8deg) scale(1.1)}}
+.btn-dice.result .dice-face{animation:popDice .4s ease}
+@keyframes popDice{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+.btn-dice.ready{border-color:var(--gold);cursor:pointer;animation:pulseDice 1.5s ease-in-out infinite}
+.btn-dice.ready:active{transform:scale(.95)}
+.btn-dice.ready .dice-label{color:var(--gold)}
+@keyframes pulseDice{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.4)}50%{box-shadow:0 0 0 14px rgba(245,158,11,0)}}
+.btn-dice.countdown{border-color:var(--muted);opacity:.7}
+.btn-dice.countdown .dice-face{animation:none}
+.btn-dice .ct-label{font-size:22px;font-weight:800;color:var(--gold);line-height:1}
+.btn-dice .ct-label.hidden{display:none}
+
+.btn-next{
+  padding:8px 24px;border:none;border-radius:var(--radius-sm);
+  background:var(--gold);color:#000;font-size:13px;font-weight:700;cursor:pointer;
+  transition:opacity .2s;
+}
+.btn-next:hover{opacity:.85}
+.btn-next:disabled{opacity:.4;cursor:not-allowed}
+
+/* Event card */
+.event-card{
+  background:linear-gradient(135deg,var(--surface),var(--surface2));
+  border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;
+  display:flex;align-items:center;gap:12px;
+  transform:translateY(10px);opacity:0;transition:all .4s ease;
+  min-height:0;overflow:hidden;
+}
+.event-card.show{transform:translateY(0);opacity:1}
+.event-card .e-emoji{font-size:32px}
+.event-card .e-info{flex:1}
+.event-card .e-name{font-weight:700;font-size:14px}
+.event-card .e-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.event-card .e-effects{display:flex;gap:12px;margin-top:6px}
+.event-card .e-effect{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px}
+.event-card .e-effect.good{background:rgba(34,197,94,.15);color:var(--green)}
+.event-card .e-effect.bad{background:rgba(239,68,68,.15);color:var(--red)}
+.event-card .e-effect.neutral{background:rgba(124,130,168,.15);color:var(--muted)}
+
+/* Journal */
+.journal-wrap{flex:1;min-height:0;display:flex;flex-direction:column}
+.journal-wrap .j-header{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.journal{
+  flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;
+  padding-right:4px;
+}
+.journal::-webkit-scrollbar{width:3px}
+.journal::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.j-entry{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border-radius:var(--radius-sm);padding:6px 10px;
+  font-size:12px;border:1px solid transparent;
+  animation:slideIn .3s ease;
+}
+@keyframes slideIn{from{transform:translateX(-12px);opacity:0}}
+.j-entry .j-km{font-weight:600;color:var(--gold);min-width:2.5em}
+.j-entry .j-emoji{font-size:14px}
+.j-entry .j-name{flex:1;color:var(--muted)}
+.j-entry .j-time{font-weight:600;font-variant-numeric:tabular-nums;min-width:4em;text-align:right}
+.j-entry .j-time.plus{color:var(--green)}
+.j-entry .j-time.minus{color:var(--red)}
+.j-entry .j-time.zero{color:var(--muted)}
+.j-entry.highlight{border-color:var(--gold);background:rgba(245,158,11,.08)}
+
+/* ====== FINISH SCREEN ====== */
+#screen-finish{align-items:center;text-align:center;padding-top:24px;gap:12px}
+#screen-finish .trophy{font-size:64px}
+#screen-finish h2{font-size:24px;font-weight:800}
+#screen-finish .finish-sub{color:var(--muted);font-size:13px}
+.finish-time{
+  font-size:48px;font-weight:800;font-variant-numeric:tabular-nums;
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin:4px 0;
+}
+.finish-stats{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;margin:8px 0;
+}
+.finish-stat{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:10px;text-align:center;
+}
+.finish-stat .fs-val{font-size:20px;font-weight:700}
+.finish-stat .fs-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.finish-stats-full{width:100%;margin:8px 0;max-height:200px;overflow-y:auto}
+.finish-stats-full::-webkit-scrollbar{width:3px}
+.finish-stats-full::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.finish-breakdown{width:100%}
+.finish-breakdown .fb-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:5px 10px;font-size:12px;border-bottom:1px solid var(--border);
+}
+.finish-breakdown .fb-row:last-child{border-bottom:none}
+.fb-row .fb-km{font-weight:600;min-width:4em}
+.fb-row .fb-event{flex:1;text-align:center;color:var(--muted)}
+.fb-row .fb-pace{font-weight:600;font-variant-numeric:tabular-nums}
+.btn-replay{
+  padding:14px 48px;border:none;border-radius:var(--radius);
+  background:linear-gradient(135deg,var(--gold),var(--orange));
+  color:#000;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;
+  transition:opacity .2s,transform .15s;
+}
+.btn-replay:active{transform:scale(.97)}
+
+/* ====== SCROLLBAR ====== */
+.screen{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+
+/* ====== RESPONSIVE ====== */
+@media(max-height:700px){
+  #screen-select{padding-top:8px;gap:8px}
+  #screen-select .logo{font-size:32px}
+  #screen-select h1{font-size:22px}
+  .card-row .card{padding:6px 6px}
+  .card .icon{font-size:18px}
+  .card .name{font-size:12px}
+  .btn-start{padding:12px;font-size:16px}
+}
+@media(max-height:640px){
+  #screen-race .race-header .title{font-size:14px}
+  .stats-bar{padding:6px 10px}
+  .stat-item .val{font-size:15px}
+  .stat-item .val.time{font-size:14px}
+  .energy-bar-bg{width:60px;height:6px}
+  .road-wrap{padding:10px 10px 8px}
+  .road{height:32px}
+  .road .runner{font-size:20px}
+  .btn-dice{width:76px;height:76px;border-radius:16px}
+  .btn-dice .dice-face{font-size:30px}
+  .btn-effort{padding:4px 4px;font-size:10px}
+  .btn-effort .e-icon{font-size:14px}
+  .journal-wrap .j-header{margin-bottom:3px}
+  .j-entry{padding:4px 8px;font-size:11px}
+  .event-card{padding:8px 10px}
+  .event-card .e-emoji{font-size:24px}
+  .event-card .e-name{font-size:12px}
+}
+
+/* ====== MULTIPLAYER SCREENS ====== */
+#screen-home{align-items:center;text-align:center;padding-top:40px;gap:20px}
+#screen-home .logo{font-size:64px}
+#screen-home h1{font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--gold),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+#screen-home .subtitle{color:var(--muted);font-size:14px;margin-top:-12px}
+.home-btns{display:flex;flex-direction:column;gap:12px;width:100%;max-width:280px;margin-top:12px}
+.home-btns button{width:100%;padding:16px;border:none;border-radius:var(--radius);font-size:17px;font-weight:700;cursor:pointer;transition:opacity .2s,transform .15s}
+.home-btns button:active{transform:scale(.97)}
+.home-btns .btn-solo{background:linear-gradient(135deg,var(--blue),#6366f1);color:#fff}
+.home-btns .btn-multi{background:linear-gradient(135deg,var(--gold),var(--orange));color:#000}
+
+/* Lobby */
+#screen-lobby{overflow-y:auto;gap:12px;padding:20px 16px;align-items:center;text-align:center}
+.lobby-section{width:100%;max-width:400px;text-align:left}
+.lobby-section label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:block}
+.lobby-input{width:100%;padding:12px 14px;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:15px;outline:none;transition:border-color .2s;font-family:inherit}
+.lobby-input:focus{border-color:var(--gold)}
+.lobby-input::placeholder{color:var(--muted)}
+.divider{color:var(--muted);font-size:13px;margin:8px 0;display:flex;align-items:center;gap:12px;width:100%}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.join-row{display:flex;gap:8px;width:100%}
+.join-row .lobby-input{flex:1;text-transform:uppercase;letter-spacing:4px;font-weight:700;font-size:18px;text-align:center}
+.join-row .lobby-input::placeholder{letter-spacing:0;font-weight:400;font-size:15px}
+.btn-lobby{width:100%;padding:14px;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s,transform .15s;font-family:inherit}
+.btn-lobby:active{transform:scale(.97)}
+.btn-lobby.primary{background:linear-gradient(135deg,var(--gold),var(--orange));color:#000}
+.btn-lobby.secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-back{background:transparent;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:8px;margin-top:8px}
+.btn-back:hover{color:var(--text)}
+
+/* Waiting room */
+.room-code-box{background:var(--surface);border:2px dashed var(--gold);border-radius:var(--radius);padding:16px 24px;text-align:center;width:100%;max-width:280px}
+.room-code-box .rc-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.room-code-box .rc-code{font-size:40px;font-weight:800;letter-spacing:8px;color:var(--gold);font-family:monospace;margin:4px 0}
+.room-code-box .rc-hint{font-size:12px;color:var(--muted)}
+.player-list-c{width:100%;max-width:400px}
+.player-list-c .pl-header{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;text-align:left}
+.player-list{display:flex;flex-wrap:wrap;gap:6px}
+.player-chip{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 12px 4px 6px;font-size:13px;display:flex;align-items:center;gap:4px}
+.player-chip .pc-avatar{font-size:16px}
+.player-chip .pc-name{font-weight:600;color:var(--text)}
+.player-chip .pc-host{font-size:10px;color:var(--gold);font-weight:700;margin-left:2px}
+.player-chip.you{border-color:var(--gold);background:rgba(245,158,11,.08)}
+#host-config-wrap{width:100%;max-width:400px;text-align:left;margin-top:8px}
+#host-config-wrap label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:block}
+.lobby-card-row{display:flex;gap:6px;flex-wrap:wrap}
+.lobby-card{flex:1;min-width:60px;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius-sm);padding:6px 4px;text-align:center;cursor:pointer;transition:all .2s;user-select:none;font-size:11px}
+.lobby-card:hover{border-color:var(--muted)}
+.lobby-card.selected{border-color:var(--gold);background:rgba(245,158,11,.08)}
+.lobby-card .lc-icon{font-size:16px;display:block}
+.lobby-card .lc-name{font-weight:600;display:block;margin-top:2px}
+.lobby-card .lc-detail{font-size:10px;color:var(--muted)}
+
+/* Leaderboard in race */
+#leaderboard-wrap{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:10px 12px;margin-top:4px}
+#leaderboard-wrap .lb-header{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.leaderboard{display:flex;flex-direction:column;gap:2px;max-height:140px;overflow-y:auto}
+.leaderboard::-webkit-scrollbar{width:3px}
+.leaderboard::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.lb-row{display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:var(--radius-sm);font-size:12px}
+.lb-row.me{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2)}
+.lb-row.finished{opacity:.6}
+.lb-row .lb-rank{font-weight:700;min-width:1.8em;color:var(--muted);font-size:11px}
+.lb-row .lb-rank.gold{color:var(--gold)}
+.lb-row .lb-rank.silver{color:#94a3b8}
+.lb-row .lb-rank.bronze{color:#cd7f32}
+.lb-row .lb-name{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lb-row .lb-km{font-weight:600;color:var(--muted);min-width:4em;text-align:right}
+.lb-row .lb-time{font-weight:600;font-variant-numeric:tabular-nums;min-width:5em;text-align:right}
+.lb-row .lb-badge{font-size:12px;margin-left:2px}
+.lb-empty{font-size:12px;color:var(--muted);padding:8px;text-align:center}
+
+/* Multiplayer avatars on road */
+.mp-avatar{position:absolute;top:50%;transform:translateY(-50%);font-size:14px;transition:left .8s cubic-bezier(.34,1.56,.64,1);z-index:1;opacity:.6}
+
+/* Connection status */
+.conn-status{font-size:10px;padding:2px 8px;border-radius:4px;font-weight:600}
+.conn-status.connected{color:var(--green);background:rgba(34,197,94,.1)}
+.conn-status.disconnected{color:var(--red);background:rgba(239,68,68,.1)}
+.conn-status.connecting{color:var(--gold);background:rgba(245,158,11,.1)}
+
+@media(max-height:700px){
+  #screen-home{padding-top:20px;gap:12px}
+  #screen-home .logo{font-size:48px}
+  #screen-home h1{font-size:26px}
+  .room-code-box .rc-code{font-size:32px}
+  .home-btns button{padding:12px}
+}
+
+</head>
+<body>
+<div id="app">
+
+<!-- ====== SCREEN: SELECT ====== -->
+<div id="screen-select" class="screen active">
+  <div class="logo">🏃</div>
+  <h1>Le Dé du Coureur</h1>
+  <p class="subtitle">Chaque kilomètre est un lancer de dé</p>
+
+  <div class="sel-section">
+    <label>🏁 Distance</label>
+    <div class="card-row" id="distance-options"></div>
+  </div>
+
+  <div class="sel-section">
+    <label>🌍 Ville / Terrain</label>
+    <div class="card-row" id="city-options"></div>
+  </div>
+
+  <div class="sel-section">
+    <label>🎯 Niveau</label>
+    <div class="card-row" id="difficulty-options"></div>
+  </div>
+
+  <button class="btn-start" id="btn-start" disabled>Choisis ta course</button>
+</div>
+
+<!-- ====== SCREEN: RACE ====== -->
+<div id="screen-race" class="screen">
+  <div class="race-header">
+    <div>
+      <div class="title">🏃 Le Dé du <span>Coureur</span></div>
+      <div class="info" id="race-info"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="conn-status disconnected" id="conn-status">Déconnecté</span>
+      <button class="btn-quit" id="btn-quit">✕</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="val time" id="stat-time">0:00</span>
+      <span class="lbl">Temps course</span>
+    </div>
+    <div class="stat-item">
+      <span class="val" id="stat-km">0/0</span>
+      <span class="lbl">Kilomètre</span>
+    </div>
+    <div class="stat-spacer"></div>
+    <div class="energy-wrap">
+      <div class="energy-bar-bg">
+        <div class="energy-bar-fill" id="energy-fill" style="width:100%"></div>
+      </div>
+      <span class="energy-label">⚡ <span id="energy-pct">100</span>%</span>
+    </div>
+  </div>
+
+  <div class="road-wrap">
+    <div class="road" id="road">
+      <div class="road-markings"></div>
+      <span class="start-flag">🏁</span>
+      <span class="runner" id="runner" style="left:8px">🏃</span>
+      <div id="mp-avatars"></div>
+      <span class="finish-flag">🏁</span>
+    </div>
+    <div class="road-progress">
+      <span>Départ</span>
+      <span class="km-progress" id="road-label">0 / 0 km</span>
+      <span>Arrivée</span>
+    </div>
+  </div>
+
+  <div class="effort-wrap" id="effort-selector">
+    <button class="btn-effort" data-effort="conserve">
+      <span class="e-icon">🛡️</span> Conserver
+    </button>
+    <button class="btn-effort selected" data-effort="normal">
+      <span class="e-icon">⚖️</span> Normal
+    </button>
+    <button class="btn-effort" data-effort="push">
+      <span class="e-icon">🔥</span> Pousser
+    </button>
+  </div>
+
+  <div class="dice-area">
+    <button class="btn-dice countdown" id="btn-dice" disabled>
+      <span class="dice-face">🎲</span>
+      <span class="dice-label">Prêt dans</span>
+      <span class="ct-label" id="ct-label">4</span>
+    </button>
+  </div>
+
+  <div class="event-card" id="event-card">
+    <span class="e-emoji" id="e-emoji">🎲</span>
+    <div class="e-info">
+      <div class="e-name" id="e-name">Prêt ?</div>
+      <div class="e-desc" id="e-desc">Choisis ton effort et lance le dé !</div>
+      <div class="e-effects" id="e-effects"></div>
+    </div>
+  </div>
+
+  <div id="leaderboard-wrap" style="display:none">
+    <div class="lb-header">📊 Classement</div>
+    <div class="leaderboard" id="leaderboard"><div class="lb-empty">En attente des autres coureurs...</div></div>
+  </div>
+
+  <div class="journal-wrap">
+    <div class="j-header">📋 Journal de course</div>
+    <div class="journal" id="journal"></div>
+  </div>
+</div>
+
+<!-- ====== SCREEN: FINISH ====== -->
+<div id="screen-finish" class="screen">
+  <div class="trophy">🏆</div>
+  <h2>Course terminée !</h2>
+  <p class="finish-sub" id="finish-sub"></p>
+  <div class="finish-time" id="finish-time">0:00</div>
+  <div class="finish-stats" id="finish-stats"></div>
+  <div class="finish-stats-full" id="finish-breakdown-wrap">
+    <div class="j-header">📋 Détail des kilomètres</div>
+    <div class="finish-breakdown" id="finish-breakdown"></div>
+  </div>
+  <button class="btn-replay" id="btn-replay">🔄 Rejouer</button>
+</div>
+
+<!-- ====== SCREEN: HOME ====== -->
+<div id="screen-home" class="screen active">
+  <div class="logo">🏃</div>
+  <h1>Le Dé du Coureur</h1>
+  <p class="subtitle">Chaque kilomètre est un lancer de dé</p>
+  <div class="home-btns">
+    <button class="btn-solo" id="btn-go-solo">👤 Solo</button>
+    <button class="btn-multi" id="btn-go-multi">👥 Multijoueur</button>
+  </div>
+</div>
+
+<!-- ====== SCREEN: LOBBY ====== -->
+<div id="screen-lobby" class="screen">
+  <div id="lobby-form">
+    <div class="logo" style="font-size:40px;margin-top:12px">🏃</div>
+    <h2 style="font-size:20px;margin:4px 0">Mode Multijoueur</h2>
+    <div class="lobby-section" style="margin-top:8px">
+      <label>👤 Ton pseudo</label>
+      <input class="lobby-input" id="mp-pseudo" placeholder="Entre ton pseudo" maxlength="16">
+    </div>
+    <button class="btn-lobby primary" id="btn-create-room" style="margin-top:8px">🏁 Créer une course</button>
+    <div class="divider">ou rejoindre avec un code</div>
+    <div class="join-row">
+      <input class="lobby-input" id="mp-code" placeholder="Code" maxlength="4">
+      <button class="btn-lobby secondary" id="btn-join-room" style="flex:0;padding:14px 20px">🔑</button>
+    </div>
+    <div id="lobby-error" style="color:var(--red);font-size:13px;margin-top:6px;display:none"></div>
+    <button class="btn-back" id="btn-back-lobby">← Retour à l'accueil</button>
+  </div>
+
+  <div id="lobby-waiting" style="display:none;width:100%;align-items:center;gap:12px;padding-top:12px">
+    <div class="logo" style="font-size:40px">🏃</div>
+    <h2 style="font-size:20px">En attente...</h2>
+    <div class="room-code-box">
+      <div class="rc-label">Code de la course</div>
+      <div class="rc-code" id="room-code">----</div>
+      <div class="rc-hint">Partage ce code à tes amis !</div>
+    </div>
+    <div class="player-list-c">
+      <div class="pl-header">👥 Joueurs dans la course</div>
+      <div class="player-list" id="player-list"></div>
+    </div>
+    <div id="host-config-wrap" style="display:none">
+      <label style="margin-top:8px">🏁 Distance</label>
+      <div class="lobby-card-row" id="mp-distance-options"></div>
+      <label style="margin-top:6px">🌍 Ville</label>
+      <div class="lobby-card-row" id="mp-city-options"></div>
+      <label style="margin-top:6px">🎯 Niveau</label>
+      <div class="lobby-card-row" id="mp-difficulty-options"></div>
+      <button class="btn-start" id="btn-start-race" style="margin-top:10px">▶️ Lancer la course !</button>
+    </div>
+    <button class="btn-back" id="btn-leave-room">✕ Quitter la salle</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ====== CONFIGURATION ======
+const DATA = {
+  distances: [
+    { id:'10k', label:'10 km', km:10, icon:'🏃‍♂️', detail:'10 km' },
+    { id:'semi', label:'Semi-Marathon', km:21.1, icon:'🏃', detail:'21.1 km' },
+    { id:'marathon', label:'Marathon', km:42.2, icon:'🏅', detail:'42.2 km' }
+  ],
+  cities: {
+    paris: {
+      name:'Paris', icon:'🗼', terrain:'Plat', desc:'Urbain · Roulant',
+      events:[
+        { name:'Clou au pied', emoji:'👟', desc:'Tu marches sur un clou !', time:-30, energy:-8 },
+        { name:'Vent de face', emoji:'💨', desc:'Le vent te ralentit...', time:-15, energy:-4 },
+        { name:'Faux plat', emoji:'😮‍💨', desc:'Une légère montée !', time:-10, energy:-3 },
+        { name:'Rien à signaler', emoji:'😐', desc:'Kilomètre tranquille', time:0, energy:0 },
+        { name:'Descente', emoji:'⛰️', desc:'Ça glisse tout seul !', time:20, energy:3 },
+        { name:'Runner\'s High', emoji:'🕊️', desc:'Nuage d\'euphorie !', time:30, energy:5 }
+      ]
+    },
+    sanfran: {
+      name:'San Francisco', icon:'🌉', terrain:'Vallonné', desc:'Côtes légendaires',
+      events:[
+        { name:'Clou au pied', emoji:'👟', desc:'Aïe, sur la colline !', time:-30, energy:-8 },
+        { name:'Vent du Pacifique', emoji:'💨', desc:'Bourrasque côtière', time:-15, energy:-5 },
+        { name:'Côte raide', emoji:'🏔️', desc:'Une pente à 20% !', time:-25, energy:-10 },
+        { name:'Point de vue', emoji:'🌅', desc:'Vue magnifique !', time:10, energy:5 },
+        { name:'Descente sur SF', emoji:'🎢', desc:'Descente vertigineuse', time:25, energy:4 },
+        { name:'Golden Gate', emoji:'🌉', desc:'L\'énergie du pont !', time:20, energy:8 }
+      ]
+    },
+    nairobi: {
+      name:'Nairobi', icon:'🦒', terrain:'Montagne', desc:'Haute altitude',
+      events:[
+        { name:'Clou au pied', emoji:'👟', desc:'Sur le sentier !', time:-30, energy:-10 },
+        { name:'Vent d\'altitude', emoji:'🌬️', desc:'L\'air est rare...', time:-20, energy:-8 },
+        { name:'Montée difficile', emoji:'⛰️', desc:'Ça pique !', time:-30, energy:-12 },
+        { name:'Faune sauvage', emoji:'🦒', desc:'Des girafes !', time:15, energy:6 },
+        { name:'Descente technique', emoji:'🏞️', desc:'Prudence mais rapide', time:20, energy:3 },
+        { name:'Aigle guide', emoji:'🦅', desc:'Porté par l\'aigle !', time:35, energy:6 }
+      ]
+    },
+    tokyo: {
+      name:'Tokyo', icon:'🗾', terrain:'Mixte', desc:'Urbain dense',
+      events:[
+        { name:'Clou au pied', emoji:'👟', desc:'Dans Shibuya !', time:-30, energy:-8 },
+        { name:'Feux rouges', emoji:'🚦', desc:'Arrêt au feu...', time:-15, energy:-3 },
+        { name:'Ruelle étroite', emoji:'🏮', desc:'Détour imprévu', time:-10, energy:-2 },
+        { name:'Cerisiers en fleurs', emoji:'🌸', desc:'Moment de grâce', time:15, energy:6 },
+        { name:'Ravitaillement', emoji:'🍜', desc:'Un bol de nouilles !', time:10, energy:10 },
+        { name:'Lièvre local', emoji:'🏃‍♂️', desc:'Un coureur t\'emmène !', time:30, energy:4 }
+      ]
+    }
+  },
+  difficulties: [
+    { id:'debutant', label:'Débutant', icon:'🌱', pace:{'10k':330,'semi':360,'marathon':390}, energyMult:.8 },
+    { id:'intermediaire', label:'Intermédiaire', icon:'⚡', pace:{'10k':300,'semi':330,'marathon':360}, energyMult:1.0 },
+    { id:'confirme', label:'Confirmé', icon:'🔥', pace:{'10k':270,'semi':300,'marathon':315}, energyMult:1.2 },
+    { id:'elite', label:'Élite', icon:'💎', pace:{'10k':240,'semi':255,'marathon':270}, energyMult:1.5 }
+  ],
+  getEnergyCost(distanceId, difficultyId){
+    const costs = {'10k':9.5,'semi':4.5,'marathon':2.2};
+    const base = costs[distanceId];
+    const mult = this.difficulties.find(d=>d.id===difficultyId).energyMult;
+    return +(base * mult).toFixed(1);
+  }
+};
+
+// ====== GAME STATE ======
+const G = {
+  screen:'select',
+  distanceId:null,
+  cityId:null,
+  difficultyId:null,
+  km:0,
+  totalKm:0,
+  totalTime:0,
+  energy:100,
+  history:[],
+  phase:'roll',
+  selectedEffort:'normal',
+  isRolling:false,
+  finished:false
+};
+
+function resetGame(){
+  if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null;}
+  G.km=0; G.totalTime=0; G.energy=100; G.history=[];
+  G.phase='ready'; G.isRolling=false; G.finished=false;
+  document.getElementById('event-card').classList.remove('show');
+  document.getElementById('journal').innerHTML='';
+  document.getElementById('btn-dice').className='btn-dice ready';
+  document.getElementById('btn-dice').disabled=false;
+  const face=document.getElementById('btn-dice').querySelector('.dice-face');
+  face.textContent='🎲';
+  document.getElementById('ct-label').classList.add('hidden');
+}
+
+// ====== UTILITIES ======
+function fmtTime(sec){
+  sec=Math.round(sec);
+  const h=Math.floor(sec/3600);
+  const m=Math.floor((sec%3600)/60);
+  const s=sec%60;
+  if(h>0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+function fmtPace(secPerKm){
+  const m=Math.floor(secPerKm/60);
+  const s=Math.round(secPerKm%60);
+  return `${m}:${String(s).padStart(2,'0')}/km`;
+}
+function rollD6(){return Math.floor(Math.random()*6)+1;}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// ====== TIME ANIMATION ======
+let timeAnimId=null;
+function animateTime(fromSec,toSec,duration=600){
+  if(timeAnimId)cancelAnimationFrame(timeAnimId);
+  const el=document.getElementById('stat-time');
+  const start=performance.now();
+  function tick(now){
+    const t=Math.min(1,(now-start)/duration);
+    const eased=1-Math.pow(1-t,3);
+    const cur=Math.round(fromSec+(toSec-fromSec)*eased);
+    el.textContent=fmtTime(cur);
+    if(t<1)timeAnimId=requestAnimationFrame(tick);
+    else timeAnimId=null;
+  }
+  timeAnimId=requestAnimationFrame(tick);
+}
+function setTimeImmediate(sec){
+  if(timeAnimId){cancelAnimationFrame(timeAnimId);timeAnimId=null;}
+  document.getElementById('stat-time').textContent=fmtTime(sec);
+}
+
+// ====== RENDER: SELECT ======
+function renderSelect(){
+  const sel=G;
+  // Distances
+  const distEl=document.getElementById('distance-options');
+  distEl.innerHTML=DATA.distances.map(d=>`
+    <div class="card${sel.distanceId===d.id?' selected':''}" data-type="distance" data-id="${d.id}">
+      <span class="icon">${d.icon}</span>
+      <span class="name">${d.label}</span>
+      <span class="detail">${d.detail}</span>
+    </div>
+  `).join('');
+
+  // Cities
+  const cityEl=document.getElementById('city-options');
+  cityEl.innerHTML=Object.entries(DATA.cities).map(([id,c])=>`
+    <div class="card${sel.cityId===id?' selected':''}" data-type="city" data-id="${id}">
+      <span class="icon">${c.icon}</span>
+      <span class="name">${c.name}</span>
+      <span class="detail">${c.terrain}</span>
+    </div>
+  `).join('');
+
+  // Difficulties
+  const diffEl=document.getElementById('difficulty-options');
+  diffEl.innerHTML=DATA.difficulties.map(d=>{
+    const pace=d.pace[sel.distanceId||'10k'];
+    return `<div class="card${sel.difficultyId===d.id?' selected':''}" data-type="difficulty" data-id="${d.id}">
+      <span class="icon">${d.icon}</span>
+      <span class="name">${d.label}</span>
+      <span class="detail">${fmtPace(pace)}</span>
+    </div>`;
+  }).join('');
+
+  // Start button
+  const btn=document.getElementById('btn-start');
+  const ready=sel.distanceId&&sel.cityId&&sel.difficultyId;
+  btn.disabled=!ready;
+  btn.textContent=ready?'🏁 Prêt à courir !':'Choisis ta course';
+
+  // Attach events (using delegation from parent is simpler - handled in main)
+}
+
+function onSelectClick(e){
+  const card=e.target.closest('.card');
+  if(!card)return;
+  const type=card.dataset.type;
+  const id=card.dataset.id;
+  if(type==='distance') G.distanceId=id;
+  else if(type==='city') G.cityId=id;
+  else if(type==='difficulty') G.difficultyId=id;
+  renderSelect();
+}
+
+// ====== START RACE ======
+function startRace(){
+  resetGame();
+  const dist=DATA.distances.find(d=>d.id===G.distanceId);
+  G.totalKm=dist.km;
+  showScreen('race');
+  updateRaceUI();
+  document.getElementById('race-info').textContent=
+    `${dist.label} · ${DATA.cities[G.cityId].name} · ${DATA.difficulties.find(d=>d.id===G.difficultyId).label}`;
+  updateRoad();
+  document.getElementById('event-card').classList.add('show');
+  document.getElementById('e-emoji').textContent='🎲';
+  document.getElementById('e-name').textContent='Prêt ?';
+  document.getElementById('e-desc').textContent='Choisis ton effort et lance le dé !';
+  document.getElementById('e-effects').innerHTML='';
+}
+
+// ====== RACE UI UPDATE ======
+function updateRaceUI(prevTime){
+  const dist=DATA.distances.find(d=>d.id===G.distanceId);
+  if(prevTime!==undefined&&prevTime!==G.totalTime){
+    animateTime(prevTime,G.totalTime);
+  } else {
+    setTimeImmediate(G.totalTime);
+  }
+  document.getElementById('stat-km').textContent=`${G.km}/${dist.km}`;
+  const pct=Math.round(G.energy);
+  document.getElementById('energy-pct').textContent=pct;
+  const fill=document.getElementById('energy-fill');
+  fill.style.width=pct+'%';
+  fill.style.background=pct>60? 'var(--green)' : pct>30? 'var(--orange)' : 'var(--red)';
+}
+
+function updateRoad(){
+  const dist=DATA.distances.find(d=>d.id===G.distanceId);
+  const pct=dist.km>0? Math.min(G.km/G.totalKm,1) : 0;
+  const runner=document.getElementById('runner');
+  const road=document.getElementById('road');
+  const roadW=road.offsetWidth;
+  const maxL=Math.max(48,roadW-56);
+  runner.style.left=Math.round(8 + pct*(maxL-8))+'px';
+  document.getElementById('road-label').textContent=`${G.km} / ${dist.km} km`;
+}
+
+function addJournalEntry(km,name,emoji,timeEffect,isLast){
+  const j=document.getElementById('journal');
+  const div=document.createElement('div');
+  div.className='j-entry'+(isLast?' highlight':'');
+  const cls=timeEffect>0?'plus':timeEffect<0?'minus':'zero';
+  const sign=timeEffect>0?'+':'';
+  div.innerHTML=`
+    <span class="j-km">Km ${km}</span>
+    <span class="j-emoji">${emoji}</span>
+    <span class="j-name">${name}</span>
+    <span class="j-time ${cls}">${sign}${timeEffect}s</span>
+  `;
+  j.prepend(div);
+}
+
+// ====== EFFORT SELECTION ======
+function onEffortClick(e){
+  const btn=e.target.closest('.btn-effort');
+  if(!btn||G.isRolling)return;
+  document.querySelectorAll('.btn-effort').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  G.selectedEffort=btn.dataset.effort;
+}
+
+// ====== COUNTDOWN ======
+let countdownInterval=null;
+let countdownValue=0;
+
+function updateDiceButton(){
+  const btn=document.getElementById('btn-dice');
+  const face=btn.querySelector('.dice-face');
+  const label=btn.querySelector('.dice-label');
+  const ct=document.getElementById('ct-label');
+  if(G.isRolling)return;
+  if(G.phase==='countdown'){
+    btn.className='btn-dice countdown';
+    face.textContent='⏳';
+    label.textContent='Prochain dé';
+    ct.textContent=countdownValue;
+    ct.classList.remove('hidden');
+    btn.disabled=true;
+  } else {
+    btn.className='btn-dice ready';
+    face.textContent='🎲';
+    label.textContent='LANCER !';
+    ct.classList.add('hidden');
+    btn.disabled=false;
+  }
+}
+
+function startCountdown(){
+  if(countdownInterval)clearInterval(countdownInterval);
+  G.phase='countdown';
+  countdownValue=4;
+  updateDiceButton();
+  countdownInterval=setInterval(()=>{
+    countdownValue--;
+    if(countdownValue<=0){
+      clearInterval(countdownInterval);
+      countdownInterval=null;
+      G.phase='ready';
+    }
+    updateDiceButton();
+  },1000);
+}
+
+// ====== DICE ROLL ======
+async function onRollDice(){
+  if(G.isRolling||G.phase!=='ready')return;
+  if(G.km>=G.totalKm)return;
+
+  G.isRolling=true;
+  G.phase='countdown';
+  const btn=document.getElementById('btn-dice');
+  const face=btn.querySelector('.dice-face');
+  const ct=document.getElementById('ct-label');
+  btn.className='btn-dice rolling';
+  btn.disabled=true;
+
+  // Animate: cycle through faces
+  const faces=['⚀','⚁','⚂','⚃','⚄','⚅'];
+  let count=0;
+  const cycleInterval=setInterval(()=>{
+    face.textContent=faces[count%6];
+    count++;
+  },80);
+
+  // Wait
+  await new Promise(r=>setTimeout(r,700));
+  clearInterval(cycleInterval);
+
+  // Actual roll
+  const diceVal=rollD6();
+  const cityEvents=DATA.cities[G.cityId].events;
+  const event=cityEvents[diceVal-1];
+
+  btn.classList.remove('rolling');
+  btn.classList.add('result');
+  face.textContent=faces[diceVal-1];
+
+  // Apply effort multiplier
+  const mults={conserve:{time:.6,energy:.4},normal:{time:1,energy:1},push:{time:1.5,energy:1.4}};
+  const isFinalKm=G.km+1>=G.totalKm;
+  const pushMult=isFinalKm&&G.selectedEffort==='push'? 2.0 : mults[G.selectedEffort].time;
+  const effortMult=mults[G.selectedEffort];
+
+  let tEff=Math.round(event.time * pushMult);
+  let eEff=Math.round(event.energy * effortMult.energy);
+
+  // Fatigue penalty
+  const basePace=DATA.difficulties.find(d=>d.id===G.difficultyId).pace[G.distanceId];
+  const fatigue=G.energy<50? Math.floor((50-Math.max(G.energy,0))/10)*2 : 0;
+  const pace=Math.max(180, basePace + tEff + fatigue);
+
+  // Apply
+  const prevTime=G.totalTime;
+  G.km++;
+  G.totalTime+=pace;
+  G.energy=Math.max(0,Math.min(100, G.energy - DATA.getEnergyCost(G.distanceId,G.difficultyId) + eEff));
+
+  G.history.push({km:G.km,event,timeEffect:tEff,energyEffect:eEff,pace,fatigue});
+
+  // Update UI after a beat
+  await new Promise(r=>setTimeout(r,400));
+
+  // Show event card
+  const ec=document.getElementById('event-card');
+  document.getElementById('e-emoji').textContent=event.emoji;
+  document.getElementById('e-name').textContent=event.name;
+  document.getElementById('e-desc').textContent=event.desc;
+  const effEl=document.getElementById('e-effects');
+  effEl.innerHTML='';
+  const teC=tEff>=0?'good':'bad';
+  const eeC=eEff>=0?'good':'bad';
+  const teSign=tEff>=0?'+':'';
+  if(tEff!==0||eEff!==0){
+    effEl.innerHTML+=`<span class="e-effect ${teC}">${teSign}${tEff}s</span>`;
+    effEl.innerHTML+=`<span class="e-effect ${eeC}">${teSign}${eEff} ⚡</span>`;
+  } else {
+    effEl.innerHTML+=`<span class="e-effect neutral">0s</span>`;
+  }
+  if(fatigue>0){
+    effEl.innerHTML+=`<span class="e-effect bad">-${fatigue}s (fatigue)</span>`;
+  }
+  ec.classList.remove('show');
+  // Force reflow to restart animation
+  void ec.offsetWidth;
+  ec.classList.add('show');
+
+  updateRaceUI(prevTime);
+  updateRoad();
+
+  addJournalEntry(G.km,event.name,event.emoji,tEff,G.km===1);
+
+  // Check finish
+  if(G.km>=G.totalKm){
+    G.finished=true;
+    await new Promise(r=>setTimeout(r,1200));
+    showFinish();
+    G.isRolling=false;
+    return;
+  }
+
+  // Start countdown for next roll
+  G.isRolling=false;
+  startCountdown();
+}
+
+// ====== FINISH SCREEN ======
+function showFinish(){
+  showScreen('finish');
+  const dist=DATA.distances.find(d=>d.id===G.distanceId);
+  const city=DATA.cities[G.cityId];
+  const diff=DATA.difficulties.find(d=>d.id===G.difficultyId);
+
+  document.getElementById('finish-sub').textContent=`${dist.label} · ${city.name} · ${diff.label}`;
+  document.getElementById('finish-time').textContent=fmtTime(G.totalTime);
+
+  // Stats
+  const avgPace=G.totalKm>0? G.totalTime/G.totalKm : 0;
+  const bestEvent=G.history.reduce((a,b)=>b.timeEffect>a.timeEffect?b:a,{timeEffect:-999});
+  const worstEvent=G.history.reduce((a,b)=>b.timeEffect<a.timeEffect?b:a,{timeEffect:999});
+  document.getElementById('finish-stats').innerHTML=`
+    <div class="finish-stat">
+      <div class="fs-val">${fmtPace(avgPace)}</div>
+      <div class="fs-lbl">Allure moyenne</div>
+    </div>
+    <div class="finish-stat">
+      <div class="fs-val">${Math.round(G.energy)}%</div>
+      <div class="fs-lbl">Énergie finale</div>
+    </div>
+    <div class="finish-stat">
+      <div class="fs-val" style="color:var(--green)">${bestEvent.timeEffect>0?'+'+bestEvent.timeEffect:'—'}</div>
+      <div class="fs-lbl">Meilleur jet</div>
+    </div>
+    <div class="finish-stat">
+      <div class="fs-val" style="color:var(--red)">${worstEvent.timeEffect<0?worstEvent.timeEffect:'—'}</div>
+      <div class="fs-lbl">Pire jet</div>
+    </div>
+  `;
+
+  // Breakdown
+  const bd=document.getElementById('finish-breakdown');
+  bd.innerHTML=G.history.map(h=>`
+    <div class="fb-row">
+      <span class="fb-km">Km ${h.km}</span>
+      <span class="fb-event">${h.event.emoji} ${h.event.name}</span>
+      <span class="fb-pace" style="color:${h.timeEffect>=0?'var(--green)':'var(--red)'}">${h.timeEffect>0?'+':''}${h.timeEffect}s · ${fmtPace(h.pace)}</span>
+    </div>
+  `).join('');
+}
+
+// ====== SCREEN MANAGEMENT ======
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  G.screen=id;
+}
+
+// ====== EVENT DELEGATION ======
+document.addEventListener('click',e=>{
+  const card=e.target.closest('.card');
+  if(card&&G.screen==='select'){onSelectClick(e);return;}
+
+  const effortBtn=e.target.closest('.btn-effort');
+  if(effortBtn){onEffortClick(e);return;}
+
+  const startBtn=e.target.closest('#btn-start');
+  if(startBtn&&!startBtn.disabled&&G.screen==='select'){startRace();return;}
+
+  const diceBtn=e.target.closest('#btn-dice');
+  if(diceBtn&&!diceBtn.disabled){onRollDice();return;}
+
+  const replayBtn=e.target.closest('#btn-replay');
+  if(replayBtn&&MP.mode!=='multi'){showScreen('select');renderSelect();return;}
+
+  const quitBtn=e.target.closest('#btn-quit');
+  if(quitBtn&&MP.mode!=='multi'){
+    if(confirm('Abandonner la course ?')){showScreen('select');renderSelect();}
+    return;
+  }
+});
+
+// Keyboard shortcut
+document.addEventListener('keydown',e=>{
+  if(e.key===' '||e.key==='Enter'){
+    const btn=document.getElementById('btn-dice');
+    if(!btn.disabled&&G.screen==='race'){e.preventDefault();onRollDice();return;}
+    const start=document.getElementById('btn-start');
+    if(start&&!start.disabled&&G.screen==='select'){e.preventDefault();startRace();return;}
+  }
+});
+
+// ====== MULTIPLAYER ======
+const MP = {
+  socket: null,
+  connected: false,
+  roomCode: null,
+  playerId: null,
+  isHost: false,
+  config: null,
+  players: {},   // id -> { name, km, totalTime, energy, finished, finishTime, disconnected }
+  raceStarted: false,
+  mode: 'solo',  // 'solo' | 'multi'
+};
+
+function getPseudo(){
+  let v = document.getElementById('mp-pseudo').value.trim();
+  if(!v) v = 'Coureur';
+  return v.slice(0, 16);
+}
+
+function showLobbyError(msg){
+  const el = document.getElementById('lobby-error');
+  el.textContent = msg;
+  el.style.display = msg ? '' : 'none';
+}
+
+// ── Socket events ──
+function connectSocket(){
+  MP.socket = io();
+  const s = MP.socket;
+
+  s.on('connect', () => {
+    MP.connected = true;
+    updateConnStatus();
+  });
+
+  s.on('disconnect', () => {
+    MP.connected = false;
+    updateConnStatus();
+  });
+
+  s.on('room-refresh', data => {
+    MP.roomCode = data.roomCode;
+    MP.config = data.config;
+    MP.players = {};
+    data.players.forEach(p => { MP.players[p.id] = p; });
+    MP.isHost = data.hostId === s.id;
+    MP.playerId = s.id;
+    renderWaitingRoom();
+  });
+
+  s.on('player-joined', ({ playerId, name }) => {
+    MP.players[playerId] = { id: playerId, name, km: 0, totalTime: 0, energy: 100, finished: false, finishTime: null, disconnected: false };
+    renderWaitingRoom();
+  });
+
+  s.on('player-left', ({ playerId, name }) => {
+    delete MP.players[playerId];
+    renderWaitingRoom();
+    if(MP.mode === 'multi' && G.screen === 'race') renderLeaderboard();
+  });
+
+  s.on('config-updated', config => {
+    MP.config = config;
+    renderWaitingRoom();
+  });
+
+  s.on('host-changed', ({ hostId }) => {
+    MP.isHost = hostId === s.id;
+    renderWaitingRoom();
+  });
+
+  s.on('race-started', ({ startTime, config }) => {
+    MP.config = config;
+    MP.raceStarted = true;
+    // Start the race with the room's config
+    G.distanceId = config.distance;
+    G.cityId = config.city;
+    G.difficultyId = config.difficulty;
+    MP.mode = 'multi';
+    startRace();
+    document.getElementById('leaderboard-wrap').style.display = '';
+    renderLeaderboard();
+  });
+
+  s.on('player-progress', ({ playerId, name, km, totalTime, energy }) => {
+    if(MP.players[playerId]){
+      MP.players[playerId].km = km;
+      MP.players[playerId].totalTime = totalTime;
+      MP.players[playerId].energy = energy;
+    }
+    if(G.screen === 'race'){
+      renderLeaderboard();
+      renderMPAvatars();
+    }
+  });
+
+  s.on('player-finished', ({ playerId, name, totalTime }) => {
+    if(MP.players[playerId]){
+      MP.players[playerId].finished = true;
+      MP.players[playerId].finishTime = totalTime;
+    }
+    if(G.screen === 'race') renderLeaderboard();
+  });
+}
+
+function updateConnStatus(){
+  const el = document.getElementById('conn-status');
+  if(MP.connected){
+    el.className = 'conn-status connected';
+    el.textContent = 'Connecté';
+  } else {
+    el.className = 'conn-status disconnected';
+    el.textContent = 'Déconnecté';
+  }
+}
+
+// ── Lobby: Create / Join ──
+function showLobbyForm(){
+  document.getElementById('lobby-form').style.display = '';
+  document.getElementById('lobby-waiting').style.display = 'none';
+  showLobbyError('');
+}
+
+function showLobbyWaiting(){
+  document.getElementById('lobby-form').style.display = 'none';
+  document.getElementById('lobby-waiting').style.display = 'flex';
+}
+
+// ── Waiting room render ──
+function renderWaitingRoom(){
+  const isHost = MP.isHost;
+  document.getElementById('room-code').textContent = MP.roomCode || '----';
+
+  // Player list
+  const pl = document.getElementById('player-list');
+  const pArr = Object.values(MP.players);
+  pl.innerHTML = pArr.map(p => {
+    const isMe = p.id === MP.playerId;
+    const emoji = pArr.length <= 1 ? '🏃' : ['🥇','🥈','🥉','🏃','🏃‍♂️','🏃‍♀️','🏃','🏃'][pArr.indexOf(p)] || '🏃';
+    return `<div class="player-chip${isMe?' you':''}">
+      <span class="pc-avatar">${emoji}</span>
+      <span class="pc-name">${escHtml(p.name)}${isMe?' (toi)':''}</span>
+      ${p.id === MP.hostId ? '<span class="pc-host">HÔTE</span>' : ''}
+    </div>`;
+  }).join('') || '<div class="lb-empty">Aucun joueur...</div>';
+
+  // Host config
+  const hw = document.getElementById('host-config-wrap');
+  hw.style.display = isHost ? '' : 'none';
+  if(isHost && MP.config){
+    renderMPConfig();
+  }
+}
+
+function escHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+function renderMPConfig(){
+  const c = MP.config;
+  if(!c) return;
+
+  // Distance
+  const de = document.getElementById('mp-distance-options');
+  de.innerHTML = DATA.distances.map(d =>
+    `<div class="lobby-card${c.distance===d.id?' selected':''}" data-mp-conf="distance" data-id="${d.id}">
+      <span class="lc-icon">${d.icon}</span>
+      <span class="lc-name">${d.label}</span>
+      <span class="lc-detail">${d.detail}</span>
+    </div>`
+  ).join('');
+
+  // City
+  const ce = document.getElementById('mp-city-options');
+  ce.innerHTML = Object.entries(DATA.cities).map(([id,ct]) =>
+    `<div class="lobby-card${c.city===id?' selected':''}" data-mp-conf="city" data-id="${id}">
+      <span class="lc-icon">${ct.icon}</span>
+      <span class="lc-name">${ct.name}</span>
+      <span class="lc-detail">${ct.terrain}</span>
+    </div>`
+  ).join('');
+
+  // Difficulty
+  const dife = document.getElementById('mp-difficulty-options');
+  dife.innerHTML = DATA.difficulties.map(d =>
+    `<div class="lobby-card${c.difficulty===d.id?' selected':''}" data-mp-conf="difficulty" data-id="${d.id}">
+      <span class="lc-icon">${d.icon}</span>
+      <span class="lc-name">${d.label}</span>
+      <span class="lc-detail">${fmtPace(d.pace[c.distance||'10k'])}</span>
+    </div>`
+  ).join('');
+}
+
+function onMPConfigClick(e){
+  const card = e.target.closest('.lobby-card');
+  if(!card || !MP.isHost || !MP.socket) return;
+  const type = card.dataset.mpConf;
+  const id = card.dataset.id;
+  MP.config[type] = id;
+  MP.socket.emit('update-config', { roomCode: MP.roomCode, config: MP.config });
+}
+
+// ── Leaderboard ──
+function renderLeaderboard(){
+  const lb = document.getElementById('leaderboard');
+  const pArr = Object.values(MP.players)
+    .filter(p => !p.disconnected)
+    .sort((a, b) => {
+      if(a.finished && !b.finished) return -1;
+      if(!a.finished && b.finished) return 1;
+      if(a.km !== b.km) return b.km - a.km;
+      return a.totalTime - b.totalTime;
+    });
+
+  if(!pArr.length){
+    lb.innerHTML = '<div class="lb-empty">En attente des autres coureurs...</div>';
+    return;
+  }
+
+  lb.innerHTML = pArr.map((p, i) => {
+    const isMe = p.id === MP.playerId;
+    const rank = i + 1;
+    const rankClass = rank === 1 ? 'gold' : rank === 2 ? 'silver' : rank === 3 ? 'bronze' : '';
+    const badge = p.finished ? '🏁' : '';
+    return `<div class="lb-row${isMe?' me':''}${p.finished?' finished':''}">
+      <span class="lb-rank ${rankClass}">${rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`}</span>
+      <span class="lb-name">${escHtml(p.name)}${isMe?' (toi)':''}</span>
+      <span class="lb-km">${p.finished ? 'Fini' : `Km ${p.km}`}</span>
+      <span class="lb-time">${p.totalTime > 0 ? fmtTime(p.totalTime) : '—'}</span>
+      ${badge ? `<span class="lb-badge">${badge}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── Multiplayer avatars on road ──
+function renderMPAvatars(){
+  const container = document.getElementById('mp-avatars');
+  const pArr = Object.values(MP.players)
+    .filter(p => p.id !== MP.playerId && !p.disconnected && p.km > 0);
+  const dist = DATA.distances.find(d => d.id === G.distanceId);
+  if(!dist) return;
+
+  container.innerHTML = pArr.map(p => {
+    const pct = Math.min(p.km / dist.km, 1);
+    const left = Math.round(8 + pct * (dist.km > 0 ? (document.getElementById('road')?.offsetWidth || 200) - 56 : 0));
+    return `<span class="mp-avatar" style="left:${Math.min(left, (document.getElementById('road')?.offsetWidth || 300) - 24)}px" title="${escHtml(p.name)} — Km ${p.km}">${p.finished ? '🏁' : ['🏃‍♂️','🏃‍♀️','🏃','🏃‍♂️','🏃‍♀️'][pArr.indexOf(p) % 5]}</span>`;
+  }).join('');
+}
+
+// ── Override finish for multiplayer ──
+const _origShowFinish = showFinish;
+showFinish = function(){
+  if(MP.mode === 'multi' && MP.socket){
+    MP.socket.emit('race-finished', { roomCode: MP.roomCode, totalTime: G.totalTime });
+  }
+  _origShowFinish();
+  if(MP.mode === 'multi'){
+    renderLeaderboard();
+  }
+};
+
+// ====== EVENT DELEGATION ADDITIONS ======
+document.addEventListener('click', e => {
+  // Home buttons
+  const soloBtn = e.target.closest('#btn-go-solo');
+  if(soloBtn){
+    MP.mode = 'solo';
+    MP.roomCode = null;
+    MP.players = {};
+    showScreen('select'); renderSelect();
+    return;
+  }
+
+  const multiBtn = e.target.closest('#btn-go-multi');
+  if(multiBtn){
+    if(!MP.socket) connectSocket();
+    showLobbyForm();
+    showScreen('lobby');
+    // Pre-fill pseudo from storage
+    const saved = localStorage.getItem('ddc_pseudo');
+    if(saved) document.getElementById('mp-pseudo').value = saved;
+    return;
+  }
+
+  const backLobby = e.target.closest('#btn-back-lobby');
+  if(backLobby){ showScreen('home'); return; }
+
+  // Create room
+  const createBtn = e.target.closest('#btn-create-room');
+  if(createBtn && MP.socket){
+    const name = getPseudo();
+    localStorage.setItem('ddc_pseudo', name);
+    const config = { distance: '10k', city: 'paris', difficulty: 'intermediaire' };
+    MP.socket.emit('create-room', { config, playerName: name }, resp => {
+      if(resp.ok){ showLobbyWaiting(); }
+    });
+    return;
+  }
+
+  // Join room
+  const joinBtn = e.target.closest('#btn-join-room');
+  if(joinBtn && MP.socket){
+    const code = document.getElementById('mp-code').value.trim().toUpperCase();
+    if(code.length < 3){ showLobbyError('Code trop court'); return; }
+    const name = getPseudo();
+    localStorage.setItem('ddc_pseudo', name);
+    MP.socket.emit('join-room', { roomCode: code, playerName: name }, resp => {
+      if(resp.ok){ showLobbyWaiting(); showLobbyError(''); }
+      else { showLobbyError(resp.error); }
+    });
+    return;
+  }
+
+  // Leave room
+  const leaveBtn = e.target.closest('#btn-leave-room');
+  if(leaveBtn){
+    if(MP.socket) MP.socket.disconnect();
+    MP.mode = 'solo';
+    MP.roomCode = null;
+    MP.players = {};
+    MP.raceStarted = false;
+    showScreen('home');
+    return;
+  }
+
+  // Start race (host)
+  const startRaceBtn = e.target.closest('#btn-start-race');
+  if(startRaceBtn && MP.socket && MP.isHost){
+    MP.socket.emit('start-race', { roomCode: MP.roomCode });
+    return;
+  }
+
+  // MP config cards
+  const mpCard = e.target.closest('.lobby-card');
+  if(mpCard){ onMPConfigClick(e); return; }
+
+  // Replay in multiplayer
+  const replayBtn = e.target.closest('#btn-replay');
+  if(replayBtn && MP.mode === 'multi'){
+    if(confirm('Retourner au menu principal ?')){
+      if(MP.socket) MP.socket.disconnect();
+      MP.mode = 'solo';
+      MP.roomCode = null;
+      MP.players = {};
+      MP.raceStarted = false;
+      showScreen('home');
+    }
+    return;
+  }
+
+  // Quit in multiplayer
+  const quitBtn = e.target.closest('#btn-quit');
+  if(quitBtn && MP.mode === 'multi'){
+    if(confirm('Abandonner la course ?')){
+      if(MP.socket) MP.socket.disconnect();
+      MP.mode = 'solo';
+      MP.roomCode = null;
+      MP.players = {};
+      MP.raceStarted = false;
+      showScreen('home');
+    }
+    return;
+  }
+});
+
+// ── Emit progress on km complete ──
+const _origOnRollDice = onRollDice;
+onRollDice = async function(){
+  const result = await _origOnRollDice.apply(this, arguments);
+  // After km completes, emit to server
+  if(MP.mode === 'multi' && MP.socket && MP.roomCode && !G.finished){
+    MP.socket.emit('km-complete', {
+      roomCode: MP.roomCode,
+      km: G.km,
+      totalTime: G.totalTime,
+      energy: G.energy,
+    });
+    renderLeaderboard();
+    renderMPAvatars();
+  }
+  return result;
+};
+
+// ── INIT ──
+showScreen('home');
+// Solo mode: select screen still works from home
+renderSelect();
+</script>
+
+</body>
+</html>
