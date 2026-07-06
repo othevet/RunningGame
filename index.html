@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Le Dé du Coureur</title>
-<script src="/socket.io/socket.io.js"></script>
+
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1072,6 +1072,7 @@ const MP = {
   config: null,
   players: {},   // id -> { name, km, totalTime, energy, finished, finishTime, disconnected }
   raceStarted: false,
+  connecting: false,
   mode: 'solo',  // 'solo' | 'multi'
 };
 
@@ -1088,8 +1089,28 @@ function showLobbyError(msg){
 }
 
 // ── Socket events ──
-function connectSocket(){
-  MP.socket = io();
+function connectSocket(cb){
+  if(MP.socket){ if(cb)cb(); return; }
+  if(MP.connecting) return;
+  MP.connecting = true;
+  showLobbyError('🔄 Connexion au serveur...');
+  const s=document.createElement('script');
+  s.src='/socket.io/socket.io.js';
+  s.onload=()=>{
+    MP.socket = io();
+    setupSocketHandlers();
+    MP.connecting = false;
+    showLobbyError('');
+    if(cb)cb();
+  };
+  s.onerror=()=>{
+    MP.connecting = false;
+    showLobbyError('❌ Impossible de se connecter au serveur');
+  };
+  document.head.appendChild(s);
+}
+
+function setupSocketHandlers(){
   const s = MP.socket;
 
   s.on('connect', () => {
@@ -1339,10 +1360,9 @@ document.addEventListener('click', e => {
 
   const multiBtn = e.target.closest('#btn-go-multi');
   if(multiBtn){
-    if(!MP.socket) connectSocket();
     showLobbyForm();
     showScreen('lobby');
-    // Pre-fill pseudo from storage
+    connectSocket();
     const saved = localStorage.getItem('ddc_pseudo');
     if(saved) document.getElementById('mp-pseudo').value = saved;
     return;
@@ -1353,26 +1373,30 @@ document.addEventListener('click', e => {
 
   // Create room
   const createBtn = e.target.closest('#btn-create-room');
-  if(createBtn && MP.socket){
+  if(createBtn){
     const name = getPseudo();
     localStorage.setItem('ddc_pseudo', name);
-    const config = { distance: '10k', city: 'paris', difficulty: 'intermediaire' };
-    MP.socket.emit('create-room', { config, playerName: name }, resp => {
-      if(resp.ok){ showLobbyWaiting(); }
+    connectSocket(()=>{
+      const config = { distance: '10k', city: 'paris', difficulty: 'intermediaire' };
+      MP.socket.emit('create-room', { config, playerName: name }, resp => {
+        if(resp.ok){ showLobbyWaiting(); }
+      });
     });
     return;
   }
 
   // Join room
   const joinBtn = e.target.closest('#btn-join-room');
-  if(joinBtn && MP.socket){
+  if(joinBtn){
     const code = document.getElementById('mp-code').value.trim().toUpperCase();
     if(code.length < 3){ showLobbyError('Code trop court'); return; }
     const name = getPseudo();
     localStorage.setItem('ddc_pseudo', name);
-    MP.socket.emit('join-room', { roomCode: code, playerName: name }, resp => {
-      if(resp.ok){ showLobbyWaiting(); showLobbyError(''); }
-      else { showLobbyError(resp.error); }
+    connectSocket(()=>{
+      MP.socket.emit('join-room', { roomCode: code, playerName: name }, resp => {
+        if(resp.ok){ showLobbyWaiting(); showLobbyError(''); }
+        else { showLobbyError(resp.error); }
+      });
     });
     return;
   }
@@ -1385,6 +1409,7 @@ document.addEventListener('click', e => {
     MP.roomCode = null;
     MP.players = {};
     MP.raceStarted = false;
+    MP.connecting = false;
     showScreen('home');
     return;
   }
