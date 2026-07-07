@@ -99,6 +99,25 @@ body{
 }
 .energy-label{font-size:10px;color:var(--muted);font-weight:600}
 
+/* Momentum */
+.momentum-wrap{display:flex;flex-direction:column;gap:2px;width:100%;margin-top:2px;padding-top:2px;border-top:1px solid var(--border)}
+.momentum-bar-bg{width:100%;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.momentum-bar-fill{height:100%;border-radius:2px;transition:width .5s ease,background .5s ease}
+.momentum-label{font-size:9px;color:var(--muted);font-weight:600;text-align:right;line-height:1}
+
+/* Choice overlay */
+.choice-overlay{position:fixed;inset:0;z-index:950;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}
+.choice-overlay.show{display:flex}
+.choice-card{background:var(--surface);border:2px solid var(--gold);border-radius:var(--radius);padding:20px 24px;text-align:center;max-width:320px;width:90%;animation:popIn .3s ease}
+.choice-card .cc-icon{font-size:48px;display:block}
+.choice-card .cc-title{font-size:18px;font-weight:700;margin:8px 0}
+.choice-card .cc-desc{font-size:13px;color:var(--muted);margin-bottom:12px}
+.choice-card .cc-choices{display:flex;gap:8px}
+.choice-card .cc-choice{flex:1;padding:12px 8px;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+.choice-card .cc-choice:active{transform:scale(.95)}
+.choice-card .cc-choice.safe{background:var(--blue);color:#fff}
+.choice-card .cc-choice.risky{background:var(--orange);color:#000}
+
 /* Road */
 .road-wrap{
   background:var(--surface);border-radius:var(--radius);padding:16px 12px 12px;
@@ -579,6 +598,12 @@ body{
       </div>
       <span class="energy-label">⚡ <span id="energy-pct">100</span>%</span>
     </div>
+    <div class="momentum-wrap">
+      <div class="momentum-bar-bg">
+        <div class="momentum-bar-fill" id="momentum-fill" style="width:50%;background:var(--muted)"></div>
+      </div>
+      <div class="momentum-label" id="momentum-label">🌊 Élan neutre</div>
+    </div>
   </div>
 
   <div class="road-wrap">
@@ -635,6 +660,19 @@ body{
   <div class="journal-wrap">
     <div class="j-header">📋 Journal de course</div>
     <div class="journal" id="journal"></div>
+  </div>
+</div>
+
+<!-- ====== CHOICE OVERLAY ====== -->
+<div class="choice-overlay" id="choice-overlay">
+  <div class="choice-card">
+    <span class="cc-icon" id="choice-icon">🎲</span>
+    <div class="cc-title" id="choice-title">Tentation</div>
+    <div class="cc-desc" id="choice-desc">Tente ta chance ?</div>
+    <div class="cc-choices" id="choice-btns">
+      <button class="cc-choice safe" data-choice="safe">🛡️ Prudent</button>
+      <button class="cc-choice risky" data-choice="risky">🎲 Tenter</button>
+    </div>
   </div>
 </div>
 
@@ -891,6 +929,10 @@ const G = {
   weatherId:null,
   strategy:'balanced',
   isCareerRace:false,
+  momentum:50,
+  streakType:'normal',
+  streakCount:0,
+  lastEffort:'normal',
   items:[],
   lastEventBad:false,
   chainBad:false,
@@ -1078,6 +1120,7 @@ function resetGame(){
   G.items=[]; G.lastEventBad=false; G.chainBad=false; G.chainFuel=false;
   G.pb=null; G.isNewRecord=false; G.splits=[];
   G.isCareerRace=false; G.strategy='balanced';
+  G.momentum=50; G.streakType='normal'; G.streakCount=0; G.lastEffort='normal';
   aiRivals=[];
   document.getElementById('event-card').classList.remove('show');
   document.getElementById('journal').innerHTML='';
@@ -1206,6 +1249,7 @@ function startRace(){
   renderWeather();
   renderItems();
   updateRaceUI();
+  updateMomentumUI();
   aiRenderOnRoad();
   document.getElementById('race-info').textContent=
     `${dist.label} · ${DATA.cities[G.cityId].name} · ${DATA.difficulties.find(d=>d.id===G.difficultyId).label}`;
@@ -1240,6 +1284,43 @@ function renderItems(){
   }).join('');
 }
 
+// ====== CHOICE POPUP ======
+function showChoicePopup(isBadEvent){
+  return new Promise(resolve => {
+    const ov=document.getElementById('choice-overlay');
+    const icon=document.getElementById('choice-icon');
+    const title=document.getElementById('choice-title');
+    const desc=document.getElementById('choice-desc');
+    const btns=document.getElementById('choice-btns');
+    if(isBadEvent){
+      icon.textContent='⚠️';
+      title.textContent='Tenter de limiter la casse ?';
+      desc.textContent='Tu peux accepter la pénalité ou tenter ta chance : 50% de chance de la réduire de moitié, 50% de la doubler.';
+      btns.innerHTML=`
+        <button class="cc-choice safe" data-choice="safe">🛡️ Accepter</button>
+        <button class="cc-choice risky" data-choice="risky">🎲 Tenter</button>
+      `;
+    } else {
+      icon.textContent='💫';
+      title.textContent='Tenter de doubler le bonus ?';
+      desc.textContent='Tu peux garder ton bonus ou tenter ta chance : 50% de le doubler, 50% de le perdre.';
+      btns.innerHTML=`
+        <button class="cc-choice safe" data-choice="safe">✅ Garder</button>
+        <button class="cc-choice risky" data-choice="risky">🎲 Doubler</button>
+      `;
+    }
+    ov.classList.add('show');
+    const handler=e=>{
+      const btn=e.target.closest('[data-choice]');
+      if(!btn)return;
+      ov.classList.remove('show');
+      ov.removeEventListener('click',handler);
+      resolve(btn.dataset.choice);
+    };
+    ov.addEventListener('click',handler);
+  });
+}
+
 // ====== WATER STATION ======
 function showWaterStation(km){
   return new Promise(resolve => {
@@ -1272,6 +1353,18 @@ function showItemPickup(itemId){
 }
 
 // ====== RACE UI UPDATE ======
+function updateMomentumUI(){
+  const fill=document.getElementById('momentum-fill');
+  const label=document.getElementById('momentum-label');
+  const pct=G.momentum;
+  fill.style.width=pct+'%';
+  if(pct>=80){fill.style.background='var(--gold)';label.textContent='🔥 Élan maximal !';}
+  else if(pct>=60){fill.style.background='var(--green)';label.textContent='🌊 Bon élan';}
+  else if(pct>=40){fill.style.background='var(--muted)';label.textContent='🌊 Élan neutre';}
+  else if(pct>=20){fill.style.background='var(--orange)';label.textContent='💨 Élan faible';}
+  else {fill.style.background='var(--red)';label.textContent='💀 Élan brisé !';}
+}
+
 function updateRaceUI(prevTime){
   const dist=DATA.distances.find(d=>d.id===G.distanceId);
   if(prevTime!==undefined&&prevTime!==G.totalTime){
@@ -1444,6 +1537,33 @@ async function onRollDice(){
     eEff=Math.round(eEff*(tEff>=0? w.goodMult : w.badMult));
   }
 
+  // Momentum effect on this roll
+  const momPct=(G.momentum-50)/50;
+  tEff=Math.round(tEff*(1+momPct*.2));
+  eEff=Math.round(eEff*(1+momPct*.1));
+
+  // Streak tracking
+  if(G.selectedEffort===G.lastEffort){
+    G.streakCount++;
+    G.streakType=G.selectedEffort;
+  } else {
+    G.streakCount=1;
+    G.streakType=G.selectedEffort;
+  }
+  G.lastEffort=G.selectedEffort;
+
+  // Streak bonus (3+ consecutive same effort)
+  let streakMsg='';
+  if(G.streakCount>=3){
+    if(G.streakType==='conserve'){
+      eEff=Math.round(eEff*0.5);
+      streakMsg='💧 ×3 économie';
+    } else if(G.streakType==='push'){
+      tEff=Math.round(tEff*1.4);
+      streakMsg='🔥 ×3 poussée';
+    }
+  }
+
   // Apply shoes item
   const shoesIdx=G.items.findIndex(i=>i.id==='shoes');
   if(shoesIdx>=0){
@@ -1475,7 +1595,7 @@ async function onRollDice(){
   // Recovery stat bonus: reduces fatigue
   const recoveryBonus=G.isCareerRace?careerStatBonus('recovery'):0;
   const fatigueAfterRecovery=Math.max(0, fatigue - recoveryBonus*1.5);
-  let pace=Math.max(160, basePace + tEff + fatigueAfterRecovery - speedReduction);
+  let pace=Math.max(160, basePace - tEff + fatigueAfterRecovery - speedReduction);
 
   // Apply watch pace bonus
   // (already applied above as dice boost)
@@ -1505,7 +1625,11 @@ async function onRollDice(){
   // Record split
   G.splits.push({km:G.km, time:G.totalTime, pace, event:event.name});
 
-  G.history.push({km:G.km,event,timeEffect:tEff,energyEffect:eEff,pace,fatigue,chainMsg,shieldUsed,gelUsed});
+  G.history.push({km:G.km,event,timeEffect:tEff,energyEffect:eEff,pace,fatigue,chainMsg,streakMsg,shieldUsed,gelUsed});
+
+  // Update momentum
+  const momDelta=event.time>0?12:event.time<0?-8:2;
+  G.momentum=Math.max(0,Math.min(100,G.momentum+momDelta));
 
   // Update UI after a beat
   await new Promise(r=>setTimeout(r,400));
@@ -1532,6 +1656,9 @@ async function onRollDice(){
   if(chainMsg){
     effEl.innerHTML+=`<span class="e-effect neutral">${chainMsg}</span>`;
   }
+  if(G.streakCount>=3 && streakMsg){
+    effEl.innerHTML+=`<span class="e-effect neutral">${streakMsg}</span>`;
+  }
   // Weather display in event
   if(w){
     effEl.innerHTML+=`<span class="e-effect neutral">${w.icon}</span>`;
@@ -1543,6 +1670,7 @@ async function onRollDice(){
 
   updateRaceUI(prevTime);
   updateRoad();
+  updateMomentumUI();
 
   addJournalEntry(G.km,event.name,event.emoji,tEff,G.km===1);
 
@@ -1575,6 +1703,33 @@ async function onRollDice(){
       updateRaceUI();
     }
     // else skip = nothing
+  }
+
+  // Choice popup (20% chance, not on final km, not in multiplayer)
+  if(Math.random()<.2 && G.km<G.totalKm && MP.mode!=='multi'){
+    const isBad=event.time<0;
+    const choice=await showChoicePopup(isBad);
+    if(choice==='risky'){
+      if(Math.random()<.5){
+        // Success
+        if(isBad){
+          G.totalTime+=Math.round(Math.abs(tEff)*.6);
+        } else {
+          G.totalTime-=Math.round(Math.abs(tEff)*.8);
+        }
+        updateRaceUI();
+        addJournalEntry(G.km,'✅ Risque réussi!','🎯',0,true);
+      } else {
+        // Fail
+        if(isBad){
+          G.totalTime-=Math.round(Math.abs(tEff)*.5);
+        } else {
+          G.totalTime+=Math.round(Math.abs(tEff)*.7);
+        }
+        updateRaceUI();
+        addJournalEntry(G.km,'❌ Risque raté!','💀',0,true);
+      }
+    }
   }
 
   // Check finish
