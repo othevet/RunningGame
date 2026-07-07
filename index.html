@@ -1192,6 +1192,7 @@ function resetGame(){
   G.km=0; G.totalTime=0; G.energy=100; G.history=[];
   G.phase='ready'; G.isRolling=false; G.finished=false;
   G.items=[]; G.lastEventBad=false; G.chainBad=false; G.chainFuel=false;
+  G._offeredShoes=false; G._offeredGel=false;
   G.pb=null; G.isNewRecord=false; G.splits=[];
   G.strategy='balanced';
   G.momentum=50; G.streakType='normal'; G.streakCount=0; G.lastEffort='normal';
@@ -1302,6 +1303,8 @@ function onSelectClick(e){
 // ====== START RACE ======
 function startRace(){
   resetGame();
+  // Give starter items for career mode
+  if(G.isCareerRace) G.items.push({id:'gel'},{id:'shoes'});
   const dist=DATA.distances.find(d=>d.id===G.distanceId);
   G.totalKm=dist.km;
   // Weather (random solo, deterministic multi)
@@ -1722,17 +1725,19 @@ async function onRollDice(){
   energyCost*=stratMult.energyCost;
   energyCost=Math.max(1, energyCost - enduranceBonus*0.8);
 
-  // Phase 4: Item usage prompts
+  // Phase 4: Item usage prompts (once per race per item)
   let shoesUsed=false;
   const shoesIdx=G.items.findIndex(i=>i.id==='shoes');
-  if(shoesIdx>=0){
+  if(shoesIdx>=0 && !G._offeredShoes){
+    G._offeredShoes=true;
     const use=await showItemPrompt('👟','Utiliser les chaussures ?','+30s sur ce kilomètre');
     if(use){tEff+=30;G.items.splice(shoesIdx,1);shoesUsed=true;}
   }
 
   let gelUsed=false;
   const gelIdx=G.items.findIndex(i=>i.id==='gel');
-  if(gelIdx>=0 && G.energy<60){
+  if(gelIdx>=0 && G.energy<60 && !G._offeredGel){
+    G._offeredGel=true;
     const use=await showItemPrompt('🧃','Boire un gel ?','+20 ⚡ énergie');
     if(use){G.energy=Math.min(100,G.energy+20);G.items.splice(gelIdx,1);gelUsed=true;}
   }
