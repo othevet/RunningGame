@@ -284,6 +284,8 @@ body{
   transition:opacity .2s,transform .15s;
 }
 .btn-replay:active{transform:scale(.97)}
+.shop-after-btn{display:none}
+.shop-after-btn.visible{display:block}
 
 /* ====== SCROLLBAR ====== */
 .screen{scrollbar-width:thin;scrollbar-color:var(--border) transparent}
@@ -708,7 +710,7 @@ body{
   </div>
   <div style="display:flex;gap:8px;width:100%;max-width:320px;margin-top:4px">
     <button class="btn-replay" id="btn-replay" style="flex:1">🔄 Rejouer</button>
-    <button class="btn-replay" id="btn-shop-after" style="flex:1;display:none;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:13px">🛒 Boutique</button>
+    <button class="btn-replay shop-after-btn" id="btn-shop-after" style="flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:13px">🛒 Boutique</button>
   </div>
   <button class="btn-back" id="btn-finish-menu" style="margin-top:4px">🏠 Menu principal</button>
 </div>
@@ -1134,6 +1136,7 @@ function resetGame(){
   const face=document.getElementById('btn-dice').querySelector('.dice-face');
   face.textContent='🎲';
   document.getElementById('ct-label').classList.add('hidden');
+  document.getElementById('btn-shop-after')?.classList.remove('visible');
 }
 
 // ====== UTILITIES ======
@@ -1830,11 +1833,11 @@ function showFinish(){
       </div>
       ${CAREER._justLeveledUp ? lvlUpHtml : ''}
     `;
-    document.getElementById('btn-shop-after').style.display='';
+    document.getElementById('btn-shop-after').classList.add('visible');
     CAREER._justLeveledUp = false;
   } else {
     rwEl.style.display = 'none';
-    document.getElementById('btn-shop-after').style.display='none';
+    document.getElementById('btn-shop-after').classList.remove('visible');
   }
 
   // Stats
