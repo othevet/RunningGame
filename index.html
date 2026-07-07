@@ -1706,14 +1706,6 @@ async function onRollDice(){
 
   addJournalEntry(G.km,event.name,event.emoji,tEff,G.km===1);
 
-  // Random item drop (20% chance)
-  if(Math.random()<.2 && G.items.length<4){
-    const itemPool=DATA.items;
-    const randItem=itemPool[Math.floor(Math.random()*itemPool.length)];
-    G.items.push({id:randItem.id});
-    showItemPickup(randItem.id);
-    renderItems();
-  }
   renderItems();
 
   // Tick AI
