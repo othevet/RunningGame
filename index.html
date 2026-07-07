@@ -405,12 +405,99 @@ body{
 .pb-flash{color:var(--gold);font-weight:800;font-size:13px;animation:pulsePb 1s ease-in-out infinite}
 @keyframes pulsePb{0%,100%{opacity:1}50%{opacity:.5}}
 
+/* ====== CAREER HOME ====== */
+#screen-career{align-items:center;text-align:center;padding-top:12px;gap:8px}
+#screen-career .ch-level{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+#screen-career .ch-level span{color:var(--gold);font-size:14px;font-weight:700}
+#screen-career .ch-lvl-num{font-size:48px;font-weight:800;color:var(--gold)}
+#screen-career .ch-xp-bar{width:100%;max-width:280px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+#screen-career .ch-xp-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--orange));border-radius:3px;transition:width .6s}
+#screen-career .ch-xp-label{font-size:10px;color:var(--muted)}
+#screen-career .ch-stats{display:flex;gap:8px;width:100%;max-width:320px;flex-wrap:wrap;justify-content:center}
+#screen-career .ch-stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;text-align:center;flex:1;min-width:60px}
+#screen-career .ch-stat .cs-icon{font-size:18px;display:block}
+#screen-career .ch-stat .cs-val{font-size:16px;font-weight:700;margin-top:2px}
+#screen-career .ch-stat .cs-lbl{font-size:9px;color:var(--muted);text-transform:uppercase}
+#screen-career .ch-money{font-size:20px;font-weight:700;color:var(--gold)}
+#screen-career .ch-money span{font-size:14px}
+.career-btns{display:flex;flex-direction:column;gap:8px;width:100%;max-width:280px;margin-top:4px}
+.career-btns button{width:100%;padding:14px;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s,transform .15s}
+.career-btns button:active{transform:scale(.97)}
+.career-btns .btn-race{background:linear-gradient(135deg,var(--gold),var(--orange));color:#000}
+.career-btns .btn-shop{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.career-btns .btn-quick{background:transparent;color:var(--muted);border:1px dashed var(--border);font-size:13px;padding:10px}
+
+/* ====== SHOP ====== */
+#screen-shop{padding-top:12px;gap:8px}
+#screen-shop .shop-header{display:flex;justify-content:space-between;align-items:center;width:100%}
+#screen-shop .shop-header h2{font-size:18px;font-weight:700}
+#screen-shop .shop-money{font-size:16px;font-weight:700;color:var(--gold)}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;max-width:400px;margin:8px 0}
+.shop-item{background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:10px;text-align:center;transition:all .2s;cursor:pointer}
+.shop-item:hover{border-color:var(--gold)}
+.shop-item.owned{border-color:var(--green);opacity:.6;cursor:default}
+.shop-item .si-icon{font-size:28px;display:block}
+.shop-item .si-name{font-size:12px;font-weight:600;margin-top:4px}
+.shop-item .si-desc{font-size:10px;color:var(--muted);margin-top:2px}
+.shop-item .si-price{font-size:13px;font-weight:700;color:var(--gold);margin-top:4px}
+.shop-item.owned .si-price{color:var(--green)}
+.shop-item.locked{opacity:.4;cursor:not-allowed}
+
+/* ====== STRATEGY ====== */
+.strat-row{display:flex;gap:6px;width:100%}
+.btn-strat{flex:1;padding:10px 4px;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--surface);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}
+.btn-strat:hover{border-color:var(--muted)}
+.btn-strat.selected{border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,.08)}
+.btn-strat .strat-icon{font-size:18px;display:block;margin-bottom:2px}
+.btn-strat .strat-desc{font-size:9px;color:var(--muted);margin-top:2px}
+
+/* ====== WATER STATION ====== */
+.water-overlay{position:fixed;inset:0;z-index:900;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}
+.water-overlay.show{display:flex}
+.water-card{background:var(--surface);border:2px solid var(--blue);border-radius:var(--radius);padding:20px 24px;text-align:center;max-width:320px;width:90%;animation:popIn .3s ease}
+@keyframes popIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+.water-card .wc-icon{font-size:48px;display:block}
+.water-card .wc-title{font-size:20px;font-weight:700;margin:8px 0}
+.water-card .wc-desc{font-size:13px;color:var(--muted);margin-bottom:12px}
+.water-card .wc-stats{display:flex;gap:12px;justify-content:center;margin-bottom:12px}
+.water-card .wc-stat{text-align:center}
+.water-card .wc-stat .wcs-val{font-size:18px;font-weight:700}
+.water-card .wc-stat .wcs-lbl{font-size:10px;color:var(--muted)}
+.water-card .wc-choices{display:flex;gap:8px}
+.water-card .wc-choice{flex:1;padding:10px 8px;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
+.water-card .wc-choice:active{transform:scale(.95)}
+.water-card .wc-choice.drink{background:var(--blue);color:#fff}
+.water-card .wc-choice.skip{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.water-card .wc-choice.sprint{background:var(--orange);color:#000}
+
+/* ====== AI RIVALS ====== */
+.ai-avatar{position:absolute;top:50%;transform:translateY(-50%);font-size:13px;transition:left .8s cubic-bezier(.34,1.56,.64,1);z-index:1;opacity:.7;font-weight:700;display:flex;align-items:center;gap:2px}
+.ai-avatar .ai-dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.ai-avatar .ai-dot.behind{background:var(--red)}
+.ai-avatar .ai-dot.ahead{background:var(--green)}
+
+/* ====== FINISH REWARDS ====== */
+.finish-rewards{display:flex;gap:12px;justify-content:center;margin:8px 0}
+.finish-reward{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 16px;text-align:center}
+.finish-reward .fr-icon{font-size:24px;display:block}
+.finish-reward .fr-val{font-size:18px;font-weight:700;margin-top:2px}
+.finish-reward .fr-lbl{font-size:9px;color:var(--muted);text-transform:uppercase}
+.finish-reward .fr-val.xp{color:var(--gold)}
+.finish-reward .fr-val.money{color:var(--green)}
+
 @media(max-height:700px){
   #screen-home{padding-top:20px;gap:12px}
   #screen-home .logo{font-size:48px}
   #screen-home h1{font-size:26px}
   .room-code-box .rc-code{font-size:32px}
   .home-btns button{padding:12px}
+  #screen-career{padding-top:4px;gap:4px}
+  #screen-career .ch-lvl-num{font-size:36px}
+  #screen-career .ch-stat{padding:4px 8px}
+  .career-btns button{padding:10px}
+  .shop-grid{grid-template-columns:1fr 1fr;gap:6px}
+  .shop-item{padding:6px}
+  #screen-shop{padding-top:4px}
 
 </style>
 
@@ -438,6 +525,26 @@ body{
     <label>🎯 Niveau</label>
     <div class="card-row" id="difficulty-options"></div>
   </div>
+
+  <div class="sel-section">
+    <label>📋 Stratégie</label>
+    <div class="strat-row" id="strategy-options">
+      <button class="btn-strat" data-strat="cautious">
+        <span class="strat-icon">🛡️</span> Prudent
+        <span class="strat-desc">-30% mauvais jets</span>
+      </button>
+      <button class="btn-strat selected" data-strat="balanced">
+        <span class="strat-icon">⚖️</span> Équilibré
+        <span class="strat-desc">Standard</span>
+      </button>
+      <button class="btn-strat" data-strat="aggressive">
+        <span class="strat-icon">⚡</span> Agressif
+        <span class="strat-desc">+30% bons jets</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="career-mode-indicator" style="display:none;font-size:11px;color:var(--gold);width:100%;text-align:center">🏆 Course classée — XP et argent en jeu</div>
 
   <button class="btn-start" id="btn-start" disabled>Choisis ta course</button>
 </div>
@@ -531,12 +638,31 @@ body{
   </div>
 </div>
 
+<!-- ====== WATER STATION OVERLAY ====== -->
+<div class="water-overlay" id="water-overlay">
+  <div class="water-card">
+    <span class="wc-icon">🚰</span>
+    <div class="wc-title">Point d'eau — Km <span id="water-km">5</span></div>
+    <div class="wc-desc">Tu arrives à un ravito. Que fais-tu ?</div>
+    <div class="wc-stats">
+      <div class="wc-stat"><div class="wcs-val" id="water-energy">100</div><div class="wcs-lbl">⚡ Énergie</div></div>
+      <div class="wc-stat"><div class="wcs-val" id="water-time">0:00</div><div class="wcs-lbl">⏱ Temps</div></div>
+    </div>
+    <div class="wc-choices">
+      <button class="wc-choice drink" data-water="drink">💧 Boire (+15⚡)</button>
+      <button class="wc-choice skip" data-water="skip">⏩ Ignorer</button>
+      <button class="wc-choice sprint" data-water="sprint">💨 Sprinter (+30s)</button>
+    </div>
+  </div>
+</div>
+
 <!-- ====== SCREEN: FINISH ====== -->
 <div id="screen-finish" class="screen">
   <div class="trophy">🏆</div>
   <h2>Course terminée !</h2>
   <p class="finish-sub" id="finish-sub"></p>
   <div class="finish-time" id="finish-time">0:00</div>
+  <div class="finish-rewards" id="finish-rewards" style="display:none"></div>
   <div class="finish-stats" id="finish-stats"></div>
   <div class="finish-stats-full" id="finish-breakdown-wrap">
     <div class="j-header">📋 Détail des kilomètres</div>
@@ -551,9 +677,41 @@ body{
   <h1>Le Dé du Coureur</h1>
   <p class="subtitle">Chaque kilomètre est un lancer de dé</p>
   <div class="home-btns">
-    <button class="btn-solo" id="btn-go-solo">👤 Solo</button>
+    <button class="btn-solo" id="btn-go-solo">👤 Mode Carrière</button>
     <button class="btn-multi" id="btn-go-multi">👥 Multijoueur</button>
   </div>
+</div>
+
+<!-- ====== SCREEN: CAREER ====== -->
+<div id="screen-career" class="screen">
+  <div class="race-header" style="width:100%">
+    <div class="title">🏃 Mode <span>Carrière</span></div>
+    <button class="btn-quit" id="btn-back-home">←</button>
+  </div>
+  <div class="ch-level">NIVEAU <span id="career-level-num">1</span></div>
+  <div class="ch-lvl-num" id="career-lvl-display">1</div>
+  <div class="ch-xp-bar"><div class="ch-xp-fill" id="career-xp-fill" style="width:0%"></div></div>
+  <div class="ch-xp-label" id="career-xp-label">0 / 200 XP</div>
+  <div class="ch-money"><span>💰</span> <span id="career-money">0</span></div>
+  <div class="ch-stats" id="career-stats"></div>
+  <div class="career-btns">
+    <button class="btn-race" id="btn-career-race">🏁 Course classée</button>
+    <button class="btn-shop" id="btn-career-shop">🛒 Boutique</button>
+    <button class="btn-quick" id="btn-career-quick">⚡ Course rapide (sans carrière)</button>
+  </div>
+</div>
+
+<!-- ====== SCREEN: SHOP ====== -->
+<div id="screen-shop" class="screen">
+  <div class="race-header" style="width:100%">
+    <div class="title">🛒 <span>Boutique</span></div>
+    <button class="btn-quit" id="btn-back-shop">←</button>
+  </div>
+  <div class="shop-header">
+    <h2>Équipement</h2>
+    <div class="shop-money">💰 <span id="shop-money">0</span></div>
+  </div>
+  <div class="shop-grid" id="shop-grid"></div>
 </div>
 
 <!-- ====== SCREEN: LOBBY ====== -->
@@ -696,7 +854,23 @@ const DATA = {
     { id:'shoes',   name:'Super running',    icon:'👟', effect:'time',   value:30, desc:'+30s au prochain km' },
     { id:'cap',     name:'Casquette magique',icon:'🧢', effect:'shield', value:1,  desc:'Bloque 1 mauvais événement' },
     { id:'watch',   name:'Montre GPS',       icon:'⌚', effect:'pace',   value:0.9, desc:'Allure boostée (x0.9)' }
-  ]
+  ],
+  shop: [
+    { id:'shoes1',  name:'Baskets basiques',  icon:'👟', stat:'speed',    val:1,  price:100,  desc:'+1 Vitesse' },
+    { id:'shoes2',  name:'Baskets pro',       icon:'👟', stat:'speed',    val:2,  price:300,  desc:'+2 Vitesse', reqLevel:3 },
+    { id:'belt',    name:'Ceinture hydratation',icon:'🎒',stat:'endurance',val:1,  price:150,  desc:'+1 Endurance' },
+    { id:'socks',   name:'Chaussettes techniques',icon:'🧦',stat:'endurance',val:2,price:400,  desc:'+2 Endurance', reqLevel:5 },
+    { id:'watch2',  name:'Montre cardio',     icon:'⌚', stat:'mental',   val:1,  price:200,  desc:'+1 Mental' },
+    { id:'coach',   name:'Coach mental',      icon:'🧠', stat:'mental',   val:2,  price:500,  desc:'+2 Mental', reqLevel:7 },
+    { id:'massage', name:'Pistolet massage',  icon:'💆', stat:'recovery', val:1,  price:120,  desc:'+1 Récupération' },
+    { id:'cryo',    name:'Bain glacé',        icon:'🧊', stat:'recovery', val:2,  price:350,  desc:'+2 Récupération', reqLevel:4 }
+  ],
+  xpForLevel: lvl => lvl * 150,
+  stratMults: {
+    aggressive: { timeBad:1.3, timeGood:1.3, energyCost:1.2 },
+    balanced:   { timeBad:1.0, timeGood:1.0, energyCost:1.0 },
+    cautious:   { timeBad:0.7, timeGood:0.7, energyCost:0.8 }
+  }
 };
 
 // ====== GAME STATE ======
@@ -715,6 +889,8 @@ const G = {
   isRolling:false,
   finished:false,
   weatherId:null,
+  strategy:'balanced',
+  isCareerRace:false,
   items:[],
   lastEventBad:false,
   chainBad:false,
@@ -724,12 +900,185 @@ const G = {
   splits:[]
 };
 
+// ====== CAREER STATE ======
+const CAREER = {
+  xp: 0, level: 1, money: 0,
+  stats: { speed:1, endurance:1, mental:1, recovery:1 },
+  owned: [],
+  _inited: false
+};
+
+function careerInit(){
+  if(CAREER._inited) return;
+  try {
+    const raw = localStorage.getItem('career');
+    if(raw){
+      const d = JSON.parse(raw);
+      Object.assign(CAREER, d);
+    }
+  } catch(e) {}
+  CAREER._inited = true;
+}
+
+function careerSave(){
+  try {
+    localStorage.setItem('career', JSON.stringify({
+      xp: CAREER.xp, level: CAREER.level, money: CAREER.money,
+      stats: CAREER.stats, owned: CAREER.owned
+    }));
+  } catch(e) {}
+}
+
+function careerXpForNext(){
+  return DATA.xpForLevel(CAREER.level);
+}
+
+function careerAddXp(amount){
+  CAREER.xp += amount;
+  const needed = careerXpForNext();
+  let leveled = false;
+  while(CAREER.xp >= needed){
+    CAREER.xp -= needed;
+    CAREER.level++;
+    leveled = true;
+    // Level up: +1 to a random stat
+    const statKeys = Object.keys(CAREER.stats);
+    const stat = statKeys[Math.floor(Math.random() * statKeys.length)];
+    CAREER.stats[stat]++;
+    CAREER.money += 50; // level bonus
+  }
+  CAREER._justLeveledUp = leveled;
+  careerSave();
+}
+
+function careerAddMoney(amount){
+  CAREER.money += amount;
+  careerSave();
+}
+
+function careerStatBonus(stat){
+  return (CAREER.stats[stat] - 1) || 0;
+}
+
+function careerRenderHome(){
+  document.getElementById('career-level-num').textContent = CAREER.level;
+  document.getElementById('career-lvl-display').textContent = CAREER.level;
+  const needed = careerXpForNext();
+  const pct = Math.min(100, (CAREER.xp / needed) * 100);
+  document.getElementById('career-xp-fill').style.width = pct + '%';
+  document.getElementById('career-xp-label').textContent =
+    `${CAREER.xp} / ${needed} XP`;
+  document.getElementById('career-money').textContent = CAREER.money;
+  const st = document.getElementById('career-stats');
+  const labels = { speed:'⚡ Vitesse', endurance:'💪 Endurance', mental:'🧠 Mental', recovery:'🩹 Récup' };
+  st.innerHTML = Object.entries(CAREER.stats).map(([k,v]) =>
+    `<div class="ch-stat"><span class="cs-icon">${labels[k].split(' ')[0]}</span>
+    <span class="cs-val">${v}</span>
+    <span class="cs-lbl">${labels[k].split(' ')[1]}</span></div>`
+  ).join('');
+}
+
+function careerRenderShop(){
+  document.getElementById('shop-money').textContent = CAREER.money;
+  const g = document.getElementById('shop-grid');
+  g.innerHTML = DATA.shop.map(item => {
+    const owned = CAREER.owned.includes(item.id);
+    const locked = item.reqLevel && CAREER.level < item.reqLevel;
+    const cls = owned ? 'shop-item owned' : locked ? 'shop-item locked' : 'shop-item';
+    const price = owned ? '✓ Possédé' : locked ? `🔒 Niv. ${item.reqLevel}` : `💰 ${item.price}`;
+    return `<div class="${cls}" data-shop="${item.id}">
+      <span class="si-icon">${item.icon}</span>
+      <span class="si-name">${item.name}</span>
+      <span class="si-desc">${item.desc}</span>
+      <span class="si-price">${price}</span>
+    </div>`;
+  }).join('');
+}
+
+function careerBuyItem(id){
+  const item = DATA.shop.find(i => i.id === id);
+  if(!item || CAREER.owned.includes(id)) return false;
+  if(item.reqLevel && CAREER.level < item.reqLevel) return false;
+  if(CAREER.money < item.price) return false;
+  CAREER.money -= item.price;
+  CAREER.owned.push(id);
+  CAREER.stats[item.stat] = (CAREER.stats[item.stat] || 0) + item.val;
+  careerSave();
+  careerRenderShop();
+  return true;
+}
+
+function careerCalcRewards(rank, distance, difficulty){
+  const distKm = DATA.distances.find(d => d.id === distance).km;
+  const diff = DATA.difficulties.find(d => d.id === difficulty);
+  const baseXp = Math.round(distKm * 5 * diff.energyMult);
+  const baseMoney = Math.round(distKm * 3 * diff.energyMult);
+  const rankMult = rank === 1 ? 1.5 : rank === 2 ? 1.2 : rank === 3 ? 1.0 : 0.7;
+  return { xp: Math.round(baseXp * rankMult), money: Math.round(baseMoney * rankMult) };
+}
+
+// ====== AI RIVALS ======
+let aiRivals = [];
+
+function aiCreateRivals(){
+  const count = 2 + Math.floor(Math.random() * 2); // 2-3
+  aiRivals = [];
+  const names = ['SprintBot','Gazelle','Tortue','Faucon','Éclair','Rocket'];
+  const shuffled = [...names].sort(()=>Math.random()-.5);
+  for(let i=0; i<count; i++){
+    aiRivals.push({
+      name: shuffled[i] || `AI-${i}`,
+      km: 0,
+      totalTime: 0,
+      pace: 0,
+      progress: 0, // 0-1
+      speed: .5 + Math.random() * .5, // relative speed factor
+      emoji: ['🤖','🦌','🐢','🦅','⚡','🚀'][i] || '🏃'
+    });
+  }
+}
+
+function aiTick(){
+  const totalKm = G.totalKm;
+  aiRivals.forEach(r => {
+    // AI progress increases randomly per km tick
+    const increment = (.04 + Math.random() * .08) * r.speed;
+    r.progress = Math.min(1, r.progress + increment);
+    r.km = Math.floor(r.progress * totalKm);
+    r.totalTime = G.totalTime * r.progress / (G.totalKm > 0 ? Math.max(0.1, G.km/G.totalKm) : 1);
+    if(G.km > 0) r.totalTime = (G.totalTime / G.km) * r.km * (.85 + Math.random() * .3);
+  });
+}
+
+function aiRenderOnRoad(){
+  const existing = document.querySelectorAll('.ai-avatar');
+  existing.forEach(el => el.remove());
+  const road = document.getElementById('road');
+  if(!road) return;
+  const roadW = road.offsetWidth;
+  const maxL = Math.max(48, roadW - 56);
+  aiRivals.forEach((r, i) => {
+    const pct = Math.min(1, r.progress);
+    const el = document.createElement('div');
+    el.className = 'ai-avatar';
+    const rel = pct > (G.totalKm > 0 ? G.km/G.totalKm : 0) ? 'ahead' : 'behind';
+    el.innerHTML = `<span class="ai-dot ${rel}"></span> ${r.emoji}`;
+    el.title = `${r.name} — ${r.km} km`;
+    el.style.left = Math.round(8 + pct * (maxL - 8)) + 'px';
+    el.style.top = (i % 2 === 0 ? '8px' : 'auto');
+    el.style.bottom = (i % 2 !== 0 ? '8px' : 'auto');
+    road.appendChild(el);
+  });
+}
+
 function resetGame(){
   if(countdownInterval){clearInterval(countdownInterval);countdownInterval=null;}
   G.km=0; G.totalTime=0; G.energy=100; G.history=[];
   G.phase='ready'; G.isRolling=false; G.finished=false;
   G.items=[]; G.lastEventBad=false; G.chainBad=false; G.chainFuel=false;
   G.pb=null; G.isNewRecord=false; G.splits=[];
+  G.isCareerRace=false; G.strategy='balanced';
+  aiRivals=[];
   document.getElementById('event-card').classList.remove('show');
   document.getElementById('journal').innerHTML='';
   document.getElementById('btn-dice').className='btn-dice ready';
@@ -846,9 +1195,18 @@ function startRace(){
     G.weatherId=ws[Math.floor(Math.random()*ws.length)].id;
   }
   G.pb=getPB();
+  // Strategy
+  G.strategy=document.querySelector('.btn-strat.selected')?.dataset?.strat||'balanced';
+  const stratMult=DATA.stratMults[G.strategy]||DATA.stratMults.balanced;
+  // AI rivals (career mode only)
+  if(G.isCareerRace) aiCreateRivals();
+  // Reset water station flag
+  G._lastWaterKm=0;
   showScreen('race');
   renderWeather();
+  renderItems();
   updateRaceUI();
+  aiRenderOnRoad();
   document.getElementById('race-info').textContent=
     `${dist.label} · ${DATA.cities[G.cityId].name} · ${DATA.difficulties.find(d=>d.id===G.difficultyId).label}`;
   updateRoad();
@@ -880,6 +1238,25 @@ function renderItems(){
       ${cnt>1?`<span class="ic-count">${cnt}</span>`:''}
     </div>`;
   }).join('');
+}
+
+// ====== WATER STATION ======
+function showWaterStation(km){
+  return new Promise(resolve => {
+    const ov = document.getElementById('water-overlay');
+    document.getElementById('water-km').textContent = km;
+    document.getElementById('water-energy').textContent = Math.round(G.energy)+'%';
+    document.getElementById('water-time').textContent = fmtTime(G.totalTime);
+    ov.classList.add('show');
+    const handler = e => {
+      const btn = e.target.closest('[data-water]');
+      if(!btn) return;
+      ov.classList.remove('show');
+      ov.removeEventListener('click', handler);
+      resolve(btn.dataset.water);
+    };
+    ov.addEventListener('click', handler);
+  });
 }
 
 function showItemPickup(itemId){
@@ -1046,8 +1423,18 @@ async function onRollDice(){
   const pushMult=isFinalKm&&G.selectedEffort==='push'? 2.0 : mults[G.selectedEffort].time;
   const effortMult=mults[G.selectedEffort];
 
-  let tEff=Math.round(event.time * pushMult);
-  let eEff=Math.round(event.energy * effortMult.energy);
+  // Strategy multiplier
+  const stratMult=DATA.stratMults[G.strategy]||DATA.stratMults.balanced;
+  const sTimeMult=event.time>=0?stratMult.timeGood:stratMult.timeBad;
+  const sEnergyMult=1.0;
+
+  // Career stat bonus: mental (reroll bad) and speed (pace bonus)
+  const mentalBonus=G.isCareerRace?careerStatBonus('mental'):0;
+  const speedBonus=G.isCareerRace?careerStatBonus('speed'):0;
+  const enduranceBonus=G.isCareerRace?careerStatBonus('endurance'):0;
+
+  let tEff=Math.round(event.time * pushMult * sTimeMult);
+  let eEff=Math.round(event.energy * effortMult.energy * sEnergyMult);
 
   // Weather effect
   const w=DATA.weathers.find(w=>w.id===G.weatherId);
@@ -1083,14 +1470,22 @@ async function onRollDice(){
   // Fatigue penalty
   const basePace=DATA.difficulties.find(d=>d.id===G.difficultyId).pace[G.distanceId];
   const fatigue=G.energy<50? Math.floor((50-Math.max(G.energy,0))/10)*2 : 0;
-  let pace=Math.max(180, basePace + tEff + fatigue);
+  // Speed stat bonus: reduces base pace
+  const speedReduction=speedBonus*3;
+  // Recovery stat bonus: reduces fatigue
+  const recoveryBonus=G.isCareerRace?careerStatBonus('recovery'):0;
+  const fatigueAfterRecovery=Math.max(0, fatigue - recoveryBonus*1.5);
+  let pace=Math.max(160, basePace + tEff + fatigueAfterRecovery - speedReduction);
 
   // Apply watch pace bonus
   // (already applied above as dice boost)
 
-  // Energy cost with weather multiplier
+  // Energy cost with weather and strategy multipliers
   let energyCost=DATA.getEnergyCost(G.distanceId,G.difficultyId);
   if(w) energyCost*=w.energyCostMult;
+  energyCost*=stratMult.energyCost;
+  // Endurance stat reduces energy cost
+  energyCost=Math.max(1, energyCost - enduranceBonus*0.8);
 
   // Apply gel item
   let gelUsed=false;
@@ -1161,6 +1556,27 @@ async function onRollDice(){
   }
   renderItems();
 
+  // Tick AI
+  if(G.isCareerRace && aiRivals.length){
+    aiTick();
+    aiRenderOnRoad();
+  }
+
+  // Water station check (every 5km, not at start)
+  const hasWaterStation = G.km >= 5 && G.km % 5 === 0 && G.km !== G._lastWaterKm && G.km < G.totalKm;
+  if(hasWaterStation && G.isCareerRace){
+    G._lastWaterKm = G.km;
+    const result = await showWaterStation(G.km);
+    if(result === 'drink'){
+      G.energy = Math.min(100, G.energy + 15 + recoveryBonus*2);
+      updateRaceUI();
+    } else if(result === 'sprint'){
+      G.totalTime -= 30; // gain 30s
+      updateRaceUI();
+    }
+    // else skip = nothing
+  }
+
   // Check finish
   if(G.km>=G.totalKm){
     G.finished=true;
@@ -1202,10 +1618,63 @@ function showFinish(){
 
   G.isNewRecord=savePB(G.totalTime);
 
+  // Career rewards
+  let rewards = null;
+  if(G.isCareerRace){
+    // Calculate rank vs AI
+    let rank = 1;
+    if(aiRivals.length){
+      const myProgress = G.km / Math.max(1, G.totalKm);
+      const ahead = aiRivals.filter(r => r.progress > myProgress).length;
+      rank = ahead + 1;
+    }
+    rewards = careerCalcRewards(rank, G.distanceId, G.difficultyId);
+    careerAddXp(rewards.xp);
+    careerAddMoney(rewards.money);
+    CAREER.xpEarned = rewards.xp;
+    CAREER.moneyEarned = rewards.money;
+    CAREER.rank = rank;
+  }
+
   const pbTime=getPB();
 
   document.getElementById('finish-sub').textContent=`${dist.label} · ${city.name} · ${diff.label}`;
   document.getElementById('finish-time').textContent=fmtTime(G.totalTime);
+
+  // Rewards
+  const rwEl = document.getElementById('finish-rewards');
+  if(G.isCareerRace && rewards){
+    rwEl.style.display = '';
+    const rankEmoji = ['🥇','🥈','🥉','🏃'][Math.min(3, (CAREER.rank||1)-1)];
+    let lvlUpHtml = '';
+    // Check if leveled up
+    if(CAREER._justLeveledUp){
+      lvlUpHtml = `<div class="finish-stat" style="grid-column:1/-1">
+        <div class="fs-val" style="color:var(--gold)">⬆ NIVEAU ${CAREER.level} !</div>
+        <div class="fs-lbl">Stat augmentée !</div>
+      </div>`;
+    }
+    rwEl.innerHTML = `
+      <span style="font-size:36px">${rankEmoji}</span>
+      <div style="font-size:13px;font-weight:600;color:var(--muted)">${['1er','2e','3e','4e'][Math.min(3,(CAREER.rank||1)-1)]} / ${aiRivals.length+1}</div>
+      <div class="finish-rewards">
+        <div class="finish-reward">
+          <span class="fr-icon">⭐</span>
+          <span class="fr-val xp">+${rewards.xp} XP</span>
+          <span class="fr-lbl">Expérience</span>
+        </div>
+        <div class="finish-reward">
+          <span class="fr-icon">💰</span>
+          <span class="fr-val money">+${rewards.money}</span>
+          <span class="fr-lbl">Argent</span>
+        </div>
+      </div>
+      ${CAREER._justLeveledUp ? lvlUpHtml : ''}
+    `;
+    CAREER._justLeveledUp = false;
+  } else {
+    rwEl.style.display = 'none';
+  }
 
   // Stats
   const avgPace=G.totalKm>0? G.totalTime/G.totalKm : 0;
@@ -1269,6 +1738,14 @@ document.addEventListener('click',e=>{
   const card=e.target.closest('.card');
   if(card&&G.screen==='select'){onSelectClick(e);return;}
 
+  // Strategy selection
+  const stratBtn=e.target.closest('.btn-strat');
+  if(stratBtn&&G.screen==='select'){
+    document.querySelectorAll('.btn-strat').forEach(b=>b.classList.remove('selected'));
+    stratBtn.classList.add('selected');
+    return;
+  }
+
   const effortBtn=e.target.closest('.btn-effort');
   if(effortBtn){onEffortClick(e);return;}
 
@@ -1279,11 +1756,71 @@ document.addEventListener('click',e=>{
   if(diceBtn&&!diceBtn.disabled){onRollDice();return;}
 
   const replayBtn=e.target.closest('#btn-replay');
-  if(replayBtn&&MP.mode!=='multi'){showScreen('select');renderSelect();return;}
+  if(replayBtn&&MP.mode!=='multi'){
+    if(G.isCareerRace){showScreen('career');careerRenderHome();}
+    else {showScreen('select');renderSelect();}
+    return;
+  }
 
   const quitBtn=e.target.closest('#btn-quit');
   if(quitBtn&&MP.mode!=='multi'){
-    if(confirm('Abandonner la course ?')){showScreen('select');renderSelect();}
+    if(confirm('Abandonner la course ?')){
+      if(G.isCareerRace){showScreen('career');careerRenderHome();}
+      else {showScreen('select');renderSelect();}
+    }
+    return;
+  }
+
+  // Career: start race
+  const careerBtn=e.target.closest('#btn-career-race');
+  if(careerBtn){
+    G.isCareerRace=true;
+    showScreen('select');
+    document.getElementById('career-mode-indicator').style.display='';
+    renderSelect();
+    return;
+  }
+
+  // Career: quick race
+  const quickBtn=e.target.closest('#btn-career-quick');
+  if(quickBtn){
+    G.isCareerRace=false;
+    showScreen('select');
+    document.getElementById('career-mode-indicator').style.display='none';
+    renderSelect();
+    return;
+  }
+
+  // Career: shop
+  const shopBtn=e.target.closest('#btn-career-shop');
+  if(shopBtn){
+    showScreen('shop');
+    careerRenderShop();
+    return;
+  }
+
+  // Career: back from shop
+  const backShop=e.target.closest('#btn-back-shop');
+  if(backShop){
+    showScreen('career');
+    careerRenderHome();
+    return;
+  }
+
+  // Career: back home
+  const backHome=e.target.closest('#btn-back-home');
+  if(backHome){
+    showScreen('home');
+    return;
+  }
+
+  // Shop buy
+  const shopItem=e.target.closest('[data-shop]');
+  if(shopItem&&G.screen==='shop'){
+    const id=shopItem.dataset.shop;
+    if(!shopItem.classList.contains('owned')&&!shopItem.classList.contains('locked')){
+      careerBuyItem(id);
+    }
     return;
   }
 });
@@ -1709,8 +2246,8 @@ onRollDice = async function(){
 };
 
 // ── INIT ──
+careerInit();
 showScreen('home');
-// Solo mode: select screen still works from home
 renderSelect();
 </script>
 
