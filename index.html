@@ -706,7 +706,11 @@ body{
     <div class="j-header">📋 Détail des kilomètres</div>
     <div class="finish-breakdown" id="finish-breakdown"></div>
   </div>
-  <button class="btn-replay" id="btn-replay">🔄 Rejouer</button>
+  <div style="display:flex;gap:8px;width:100%;max-width:320px;margin-top:4px">
+    <button class="btn-replay" id="btn-replay" style="flex:1">🔄 Rejouer</button>
+    <button class="btn-replay" id="btn-shop-after" style="flex:1;display:none;background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:13px">🛒 Boutique</button>
+  </div>
+  <button class="btn-back" id="btn-finish-menu" style="margin-top:4px">🏠 Menu principal</button>
 </div>
 
 <!-- ====== SCREEN: HOME ====== -->
@@ -1826,9 +1830,11 @@ function showFinish(){
       </div>
       ${CAREER._justLeveledUp ? lvlUpHtml : ''}
     `;
+    document.getElementById('btn-shop-after').style.display='';
     CAREER._justLeveledUp = false;
   } else {
     rwEl.style.display = 'none';
+    document.getElementById('btn-shop-after').style.display='none';
   }
 
   // Stats
@@ -1912,8 +1918,10 @@ document.addEventListener('click',e=>{
 
   const replayBtn=e.target.closest('#btn-replay');
   if(replayBtn&&MP.mode!=='multi'){
-    if(G.isCareerRace){showScreen('career');careerRenderHome();}
-    else {showScreen('select');renderSelect();}
+    showScreen('select');
+    if(G.isCareerRace) document.getElementById('career-mode-indicator').style.display='';
+    renderSelect();
+    G.isCareerRace=G.isCareerRace; // persist
     return;
   }
 
@@ -1951,6 +1959,22 @@ document.addEventListener('click',e=>{
   if(shopBtn){
     showScreen('shop');
     careerRenderShop();
+    return;
+  }
+
+  // Finish: shop button (career mode)
+  const shopAfter=e.target.closest('#btn-shop-after');
+  if(shopAfter){
+    showScreen('shop');
+    careerRenderShop();
+    return;
+  }
+
+  // Finish: back to menu
+  const finishMenu=e.target.closest('#btn-finish-menu');
+  if(finishMenu){
+    if(G.isCareerRace){showScreen('career');careerRenderHome();}
+    else {showScreen('home');}
     return;
   }
 
