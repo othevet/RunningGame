@@ -955,12 +955,14 @@ const CAREER = {
 };
 
 function careerInit(){
-  if(CAREER._inited) return;
   try {
     const raw = localStorage.getItem('career');
     if(raw){
       const d = JSON.parse(raw);
       Object.assign(CAREER, d);
+    } else {
+      // First visit: save defaults
+      careerSave();
     }
   } catch(e) {}
   CAREER._inited = true;
