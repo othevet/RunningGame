@@ -754,6 +754,10 @@ body{
     <div class="shop-money">💰 <span id="shop-money">0</span></div>
   </div>
   <div class="shop-grid" id="shop-grid"></div>
+  <div class="shop-header" style="margin-top:8px">
+    <h2>Consommables</h2>
+  </div>
+  <div class="shop-grid consumables-grid" id="shop-consumables-grid"></div>
 </div>
 
 <!-- ====== SCREEN: LOBBY ====== -->
@@ -897,6 +901,12 @@ const DATA = {
     { id:'cap',     name:'Casquette magique',icon:'🧢', effect:'shield', value:1,  desc:'Bloque 1 mauvais événement' },
     { id:'watch',   name:'Montre GPS',       icon:'⌚', effect:'pace',   value:0.9, desc:'Allure boostée (x0.9)' }
   ],
+  consumables: [
+    { id:'gel',     name:'Gel énergétique',  icon:'🧃', price:50,  desc:'+20 ⚡ en course' },
+    { id:'shoes',   name:'Super running',    icon:'👟', price:80,  desc:'+30s sur un km' },
+    { id:'cap',     name:'Casquette magique',icon:'🧢', price:60,  desc:'Bloque 1 mauvais événement' },
+    { id:'watch',   name:'Montre GPS',       icon:'⌚', price:100, desc:'Dé +1' }
+  ],
   shop: [
     { id:'shoes1',  name:'Baskets basiques',  icon:'👟', stat:'speed',    val:1,  price:100,  desc:'+1 Vitesse' },
     { id:'shoes2',  name:'Baskets pro',       icon:'👟', stat:'speed',    val:2,  price:300,  desc:'+2 Vitesse', reqLevel:3 },
@@ -951,6 +961,7 @@ const CAREER = {
   xp: 0, level: 1, money: 0,
   stats: { speed:1, endurance:1, mental:1, recovery:1 },
   owned: [],
+  consumables: [],
   _inited: false
 };
 
@@ -972,7 +983,7 @@ function careerSave(){
   try {
     localStorage.setItem('career', JSON.stringify({
       xp: CAREER.xp, level: CAREER.level, money: CAREER.money,
-      stats: CAREER.stats, owned: CAREER.owned
+      stats: CAREER.stats, owned: CAREER.owned, consumables: CAREER.consumables
     }));
   } catch(e) {}
 }
@@ -1042,6 +1053,21 @@ function careerRenderShop(){
       <span class="si-price">${price}</span>
     </div>`;
   }).join('');
+  // Render consumables
+  const cg = document.getElementById('shop-consumables-grid');
+  const ownedCounts = {};
+  CAREER.consumables.forEach(id => { ownedCounts[id] = (ownedCounts[id] || 0) + 1; });
+  cg.innerHTML = DATA.consumables.map(item => {
+    const qty = ownedCounts[item.id] || 0;
+    const cls = 'shop-item' + (qty > 0 ? '' : '');
+    const priceText = qty > 0 ? `x${qty}` : `💰 ${item.price}`;
+    return `<div class="${cls}" data-consumable="${item.id}">
+      <span class="si-icon">${item.icon}</span>
+      <span class="si-name">${item.name}</span>
+      <span class="si-desc">${item.desc}</span>
+      <span class="si-price">${priceText}</span>
+    </div>`;
+  }).join('');
 }
 
 function careerBuyItem(id){
@@ -1052,6 +1078,17 @@ function careerBuyItem(id){
   CAREER.money -= item.price;
   CAREER.owned.push(id);
   CAREER.stats[item.stat] = (CAREER.stats[item.stat] || 0) + item.val;
+  careerSave();
+  careerRenderShop();
+  return true;
+}
+
+function careerBuyConsumable(id){
+  const item = DATA.consumables.find(i => i.id === id);
+  if(!item) return false;
+  if(CAREER.money < item.price) return false;
+  CAREER.money -= item.price;
+  CAREER.consumables.push(item.id);
   careerSave();
   careerRenderShop();
   return true;
@@ -1235,6 +1272,10 @@ function onSelectClick(e){
 // ====== START RACE ======
 function startRace(){
   resetGame();
+  // Load career consumables into race inventory
+  if(CAREER.consumables.length){
+    G.items.push(...CAREER.consumables.map(id => ({id})));
+  }
   const dist=DATA.distances.find(d=>d.id===G.distanceId);
   G.totalKm=dist.km;
   // Weather (random solo, deterministic multi)
@@ -1572,13 +1613,6 @@ async function onRollDice(){
     }
   }
 
-  // Apply shoes item
-  const shoesIdx=G.items.findIndex(i=>i.id==='shoes');
-  if(shoesIdx>=0){
-    tEff+=30;
-    G.items.splice(shoesIdx,1);
-  }
-
   // Chained events
   let chainMsg='';
   if(G.lastEventBad && G.selectedEffort==='push'){
@@ -1612,17 +1646,7 @@ async function onRollDice(){
   let energyCost=DATA.getEnergyCost(G.distanceId,G.difficultyId);
   if(w) energyCost*=w.energyCostMult;
   energyCost*=stratMult.energyCost;
-  // Endurance stat reduces energy cost
   energyCost=Math.max(1, energyCost - enduranceBonus*0.8);
-
-  // Apply gel item
-  let gelUsed=false;
-  const gelIdx=G.items.findIndex(i=>i.id==='gel');
-  if(gelIdx>=0 && G.energy<60){
-    G.energy=Math.min(100,G.energy+20);
-    G.items.splice(gelIdx,1);
-    gelUsed=true;
-  }
 
   // Apply
   const prevTime=G.totalTime;
@@ -1633,7 +1657,7 @@ async function onRollDice(){
   // Record split
   G.splits.push({km:G.km, time:G.totalTime, pace, event:event.name});
 
-  G.history.push({km:G.km,event,timeEffect:tEff,energyEffect:eEff,pace,fatigue,chainMsg,streakMsg,shieldUsed,gelUsed});
+  G.history.push({km:G.km,event,timeEffect:tEff,energyEffect:eEff,pace,fatigue,chainMsg,streakMsg,shieldUsed});
 
   // Update momentum
   const momDelta=event.time>0?12:event.time<0?-8:2;
@@ -1646,7 +1670,7 @@ async function onRollDice(){
   const ec=document.getElementById('event-card');
   document.getElementById('e-emoji').textContent=event.emoji;
   document.getElementById('e-name').textContent=event.name+(shieldUsed?' 🛡️':'');
-  document.getElementById('e-desc').textContent=event.desc+(gelUsed?' 🧃':'');
+  document.getElementById('e-desc').textContent=event.desc;
   const effEl=document.getElementById('e-effects');
   effEl.innerHTML='';
   const teC=tEff>=0?'good':'bad';
@@ -1998,6 +2022,32 @@ document.addEventListener('click',e=>{
     return;
   }
 
+  // Race item usage (click on item chip during race)
+  const itemChip=e.target.closest('.item-chip');
+  if(itemChip && G.screen==='race' && !G.isRolling){
+    const id=itemChip.dataset.item;
+    const idx=G.items.findIndex(i=>i.id===id);
+    if(idx>=0){
+      const item=DATA.items.find(i=>i.id===id);
+      if(item){
+        if(item.id==='shoes'){
+          G.totalTime-=30;
+          updateRaceUI();
+        } else if(item.id==='gel'){
+          G.energy=Math.min(100,G.energy+20);
+          updateRaceUI();
+        }
+        G.items.splice(idx,1);
+        // Remove from career consumables too
+        const ci=CAREER.consumables.indexOf(id);
+        if(ci>=0)CAREER.consumables.splice(ci,1);
+        careerSave();
+        renderItems();
+      }
+    }
+    return;
+  }
+
   // Shop buy
   const shopItem=e.target.closest('[data-shop]');
   if(shopItem&&G.screen==='shop'){
@@ -2005,6 +2055,12 @@ document.addEventListener('click',e=>{
     if(!shopItem.classList.contains('owned')&&!shopItem.classList.contains('locked')){
       careerBuyItem(id);
     }
+    return;
+  }
+
+  const conItem=e.target.closest('[data-consumable]');
+  if(conItem&&G.screen==='shop'){
+    careerBuyConsumable(conItem.dataset.consumable);
     return;
   }
 });
