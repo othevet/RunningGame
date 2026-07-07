@@ -118,46 +118,6 @@ body{
 .choice-card .cc-choice.safe{background:var(--blue);color:#fff}
 .choice-card .cc-choice.risky{background:var(--orange);color:#000}
 
-/* Effort overlay (choose after event) */
-.effort-overlay{position:fixed;inset:0;z-index:920;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}
-.effort-overlay.show{display:flex}
-.effort-card{background:var(--surface);border:2px solid var(--gold);border-radius:var(--radius);padding:20px 24px;text-align:center;max-width:340px;width:90%;animation:popIn .3s ease}
-.effort-card .ef-icon{font-size:36px;display:block;margin-bottom:4px}
-.effort-card .ef-title{font-size:18px;font-weight:700;margin:6px 0}
-.effort-card .ef-desc{font-size:12px;color:var(--muted);margin-bottom:10px}
-.effort-card .ef-choices{display:flex;flex-direction:column;gap:6px}
-.effort-card .ef-choice{display:flex;align-items:center;gap:10px;padding:12px;border:2px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;transition:all .2s;font-family:inherit;text-align:left;font-size:13px;color:var(--text)}
-.effort-card .ef-choice:hover{border-color:var(--gold);background:var(--surface2)}
-.effort-card .ef-choice:active{transform:scale(.98)}
-.effort-card .ef-choice .efc-icon{font-size:22px}
-.effort-card .ef-choice .efc-label{font-weight:700;font-size:13px}
-.effort-card .ef-choice .efc-desc{font-size:11px;color:var(--muted)}
-
-/* Sprint overlay */
-.sprint-overlay{position:fixed;inset:0;z-index:920;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}
-.sprint-overlay.show{display:flex}
-.sprint-card{background:var(--surface);border:2px solid var(--orange);border-radius:var(--radius);padding:24px;text-align:center;max-width:300px;width:90%;animation:popIn .3s ease}
-.sprint-card .sp-icon{font-size:56px;display:block;margin-bottom:4px}
-.sprint-card .sp-title{font-size:22px;font-weight:800;color:var(--orange);margin:4px 0}
-.sprint-card .sp-desc{font-size:13px;color:var(--muted);margin-bottom:12px}
-.sprint-card #sprint-btn{font-size:48px;padding:20px 40px;border:none;border-radius:var(--radius);background:var(--orange);color:#000;cursor:pointer;transition:all .1s;font-family:inherit;font-weight:700}
-.sprint-card #sprint-btn:active{transform:scale(.9)}
-.sprint-card #sprint-btn:disabled{opacity:.4;cursor:default}
-.sprint-card .sp-counter{font-size:14px;color:var(--muted);margin-top:4px}
-
-/* Item use overlay */
-.item-overlay{position:fixed;inset:0;z-index:920;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}
-.item-overlay.show{display:flex}
-.item-card{background:var(--surface);border:2px solid var(--blue);border-radius:var(--radius);padding:20px 24px;text-align:center;max-width:300px;width:90%;animation:popIn .3s ease}
-.item-card .it-icon{font-size:40px;display:block}
-.item-card .it-title{font-size:18px;font-weight:700;margin:6px 0}
-.item-card .it-desc{font-size:13px;color:var(--muted);margin-bottom:10px}
-.item-card .it-btns{display:flex;gap:8px}
-.item-card .it-btn{flex:1;padding:12px;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;font-family:inherit}
-.item-card .it-btn:active{transform:scale(.95)}
-.item-card .it-btn.use{background:var(--green);color:#fff}
-.item-card .it-btn.skip{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
-
 /* Road */
 .road-wrap{
   background:var(--surface);border-radius:var(--radius);padding:16px 12px 12px;
@@ -191,9 +151,19 @@ body{
 
 /* Effort selector */
 .effort-wrap{
-  width:100%;
-  background:var(--surface);border-radius:var(--radius);padding:10px;
+  display:flex;gap:6px;width:100%;
+  background:var(--surface);border-radius:var(--radius);padding:6px;
   border:1px solid var(--border);
+}
+.btn-effort{
+  flex:1;text-align:center;padding:8px 4px;border-radius:var(--radius-sm);
+  border:2px solid transparent;background:transparent;color:var(--muted);
+  font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;
+}
+.btn-effort .e-icon{font-size:16px;display:block;margin-bottom:2px}
+.btn-effort:hover{color:var(--text);background:var(--surface2)}
+.btn-effort.selected{
+  border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,.1);
 }
 
 /* Dice area */
@@ -339,6 +309,8 @@ body{
   .road .runner{font-size:20px}
   .btn-dice{width:76px;height:76px;border-radius:16px}
   .btn-dice .dice-face{font-size:30px}
+  .btn-effort{padding:4px 4px;font-size:10px}
+  .btn-effort .e-icon{font-size:14px}
   .journal-wrap .j-header{margin-bottom:3px}
   .j-entry{padding:4px 8px;font-size:11px}
   .event-card{padding:8px 10px}
@@ -649,8 +621,16 @@ body{
     </div>
   </div>
 
-  <div class="effort-wrap" style="padding:10px;font-size:12px;color:var(--muted);text-align:center">
-    🎲 Lance le dé, puis choisis ta réaction
+  <div class="effort-wrap" id="effort-selector">
+    <button class="btn-effort" data-effort="conserve">
+      <span class="e-icon">🛡️</span> Conserver
+    </button>
+    <button class="btn-effort selected" data-effort="normal">
+      <span class="e-icon">⚖️</span> Normal
+    </button>
+    <button class="btn-effort" data-effort="push">
+      <span class="e-icon">🔥</span> Pousser
+    </button>
   </div>
 
   <div class="dice-area">
@@ -692,53 +672,6 @@ body{
     <div class="cc-choices" id="choice-btns">
       <button class="cc-choice safe" data-choice="safe">🛡️ Prudent</button>
       <button class="cc-choice risky" data-choice="risky">🎲 Tenter</button>
-    </div>
-  </div>
-</div>
-
-<!-- ====== EFFORT OVERLAY (après l'événement) ====== -->
-<div class="effort-overlay" id="effort-overlay">
-  <div class="effort-card">
-    <span class="ef-icon">🎯</span>
-    <div class="ef-title">Choisis ta réaction</div>
-    <div class="ef-desc" id="effort-desc">Comment gères-tu cet événement ?</div>
-    <div class="ef-choices">
-      <button class="ef-choice" data-effort="conserve">
-        <span class="efc-icon">🛡️</span>
-        <div><div class="efc-label">Conserver</div><div class="efc-desc">Limiter les dégâts / préserver l'énergie</div></div>
-      </button>
-      <button class="ef-choice" data-effort="normal">
-        <span class="efc-icon">⚖️</span>
-        <div><div class="efc-label">Normal</div><div class="efc-desc">Rythme neutre, sans risque</div></div>
-      </button>
-      <button class="ef-choice" data-effort="push">
-        <span class="efc-icon">🔥</span>
-        <div><div class="efc-label">Pousser</div><div class="efc-desc">Tout donner, quitte à tout perdre</div></div>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ====== SPRINT OVERLAY (derniers km) ====== -->
-<div class="sprint-overlay" id="sprint-overlay">
-  <div class="sprint-card">
-    <span class="sp-icon">🏃💨</span>
-    <div class="sp-title">SPRINT !</div>
-    <div class="sp-desc">Tape sur le bouton le plus vite possible !<br>Chaque clic = -1 seconde</div>
-    <button id="sprint-btn">👊</button>
-    <div class="sp-counter" id="sprint-counter">0 clics</div>
-  </div>
-</div>
-
-<!-- ====== ITEM USE OVERLAY ====== -->
-<div class="item-overlay" id="item-overlay">
-  <div class="item-card">
-    <span class="it-icon" id="item-icon">🧃</span>
-    <div class="it-title" id="item-title">Utiliser un objet ?</div>
-    <div class="it-desc" id="item-desc">Cet objet peut t'aider maintenant.</div>
-    <div class="it-btns">
-      <button class="it-btn use" id="item-use-btn">✅ Utiliser</button>
-      <button class="it-btn skip" id="item-skip-btn">⏩ Garder</button>
     </div>
   </div>
 </div>
@@ -1332,7 +1265,7 @@ function startRace(){
   document.getElementById('event-card').classList.add('show');
   document.getElementById('e-emoji').textContent='🎲';
   document.getElementById('e-name').textContent='Prêt ?';
-  document.getElementById('e-desc').textContent='Lance le dé pour découvrir l\'événement !';
+  document.getElementById('e-desc').textContent='Choisis ton effort et lance le dé !';
   document.getElementById('e-effects').innerHTML='';
 }
 
@@ -1391,71 +1324,6 @@ function showChoicePopup(isBadEvent){
       ov.classList.remove('show');
       ov.removeEventListener('click',handler);
       resolve(btn.dataset.choice);
-    };
-    ov.addEventListener('click',handler);
-  });
-}
-
-// ====== EFFORT OVERLAY (choose after event reveal) ======
-function showEffortOverlay(){
-  return new Promise(resolve => {
-    const ov=document.getElementById('effort-overlay');
-    ov.classList.add('show');
-    const handler=e=>{
-      const btn=e.target.closest('[data-effort]');
-      if(!btn)return;
-      ov.classList.remove('show');
-      ov.removeEventListener('click',handler);
-      resolve(btn.dataset.effort);
-    };
-    ov.addEventListener('click',handler);
-  });
-}
-
-// ====== SPRINT MINIGAME (last km) ======
-function showSprintMinigame(){
-  return new Promise(resolve => {
-    const ov=document.getElementById('sprint-overlay');
-    const btn=document.getElementById('sprint-btn');
-    const ct=document.getElementById('sprint-counter');
-    let clicks=0;
-    ct.textContent='0 clics';
-    btn.disabled=false;
-    ov.classList.add('show');
-    const clickHandler=()=>{
-      clicks++;
-      ct.textContent=clicks+' clics';
-    };
-    btn.addEventListener('click',clickHandler);
-    setTimeout(()=>{
-      btn.removeEventListener('click',clickHandler);
-      btn.disabled=true;
-      ov.classList.remove('show');
-      resolve(clicks);
-    },3000);
-  });
-}
-
-// ====== ITEM USE PROMPT ======
-function showItemPrompt(icon,title,desc){
-  return new Promise(resolve => {
-    const ov=document.getElementById('item-overlay');
-    document.getElementById('item-icon').textContent=icon;
-    document.getElementById('item-title').textContent=title;
-    document.getElementById('item-desc').textContent=desc;
-    ov.classList.add('show');
-    const handler=e=>{
-      const useBtn=e.target.closest('#item-use-btn');
-      const skipBtn=e.target.closest('#item-skip-btn');
-      if(useBtn){
-        ov.classList.remove('show');
-        ov.removeEventListener('click',handler);
-        resolve(true);
-      } else if(skipBtn){
-        ov.classList.remove('show');
-        ov.removeEventListener('click',handler);
-        resolve(false);
-      }
     };
     ov.addEventListener('click',handler);
   });
@@ -1546,6 +1414,15 @@ function addJournalEntry(km,name,emoji,timeEffect,isLast){
   j.prepend(div);
 }
 
+// ====== EFFORT SELECTION ======
+function onEffortClick(e){
+  const btn=e.target.closest('.btn-effort');
+  if(!btn||G.isRolling)return;
+  document.querySelectorAll('.btn-effort').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  G.selectedEffort=btn.dataset.effort;
+}
+
 // ====== COUNTDOWN ======
 let countdownInterval=null;
 let countdownValue=0;
@@ -1601,6 +1478,7 @@ async function onRollDice(){
   btn.className='btn-dice rolling';
   btn.disabled=true;
 
+  // Animate: cycle through faces
   const faces=['⚀','⚁','⚂','⚃','⚄','⚅'];
   let count=0;
   const cycleInterval=setInterval(()=>{
@@ -1608,18 +1486,22 @@ async function onRollDice(){
     count++;
   },80);
 
+  // Wait
   await new Promise(r=>setTimeout(r,700));
   clearInterval(cycleInterval);
 
+  // Actual roll
   let diceVal=rollD6();
   const cityEvents=DATA.cities[G.cityId].events;
 
+  // Apply watch item effect: boost dice
   const watchIdx=G.items.findIndex(i=>i.id==='watch');
   if(watchIdx>=0){
     diceVal=Math.min(6,diceVal+1);
     G.items.splice(watchIdx,1);
   }
 
+  // Apply shield: if bad roll, re-roll once
   const shieldIdx=G.items.findIndex(i=>i.id==='cap');
   let shieldUsed=false;
   const rollIdx=diceVal-1;
@@ -1636,30 +1518,18 @@ async function onRollDice(){
   btn.classList.add('result');
   face.textContent=faces[diceVal-1];
 
-  // Phase 1: Show event card (basic info, wait for effort)
-  const ec=document.getElementById('event-card');
-  document.getElementById('e-emoji').textContent=event.emoji;
-  document.getElementById('e-name').textContent=event.name+(shieldUsed?' 🛡️':'');
-  document.getElementById('e-desc').textContent=event.desc;
-  document.getElementById('e-effects').innerHTML='<span class="e-effect neutral">Choisis ta réaction...</span>';
-  ec.classList.remove('show');
-  void ec.offsetWidth;
-  ec.classList.add('show');
-
-  // Phase 2: Choose effort AFTER seeing the event
-  const chosenEffort=await showEffortOverlay();
-  G.selectedEffort=chosenEffort;
-
-  // Phase 3: Calculate all effects
+  // Apply effort multiplier
   const mults={conserve:{time:.6,energy:.4},normal:{time:1,energy:1},push:{time:1.5,energy:1.4}};
   const isFinalKm=G.km+1>=G.totalKm;
   const pushMult=isFinalKm&&G.selectedEffort==='push'? 2.0 : mults[G.selectedEffort].time;
   const effortMult=mults[G.selectedEffort];
 
+  // Strategy multiplier
   const stratMult=DATA.stratMults[G.strategy]||DATA.stratMults.balanced;
   const sTimeMult=event.time>=0?stratMult.timeGood:stratMult.timeBad;
   const sEnergyMult=1.0;
 
+  // Career stat bonus: mental (reroll bad) and speed (pace bonus)
   const mentalBonus=G.isCareerRace?careerStatBonus('mental'):0;
   const speedBonus=G.isCareerRace?careerStatBonus('speed'):0;
   const enduranceBonus=G.isCareerRace?careerStatBonus('endurance'):0;
@@ -1667,6 +1537,7 @@ async function onRollDice(){
   let tEff=Math.round(event.time * pushMult * sTimeMult);
   let eEff=Math.round(event.energy * effortMult.energy * sEnergyMult);
 
+  // Weather effect
   const w=DATA.weathers.find(w=>w.id===G.weatherId);
   if(w){
     const wm=tEff>=0? w.goodMult : w.badMult;
@@ -1674,10 +1545,12 @@ async function onRollDice(){
     eEff=Math.round(eEff*(tEff>=0? w.goodMult : w.badMult));
   }
 
+  // Momentum effect on this roll
   const momPct=(G.momentum-50)/50;
   tEff=Math.round(tEff*(1+momPct*.2));
   eEff=Math.round(eEff*(1+momPct*.1));
 
+  // Streak tracking
   if(G.selectedEffort===G.lastEffort){
     G.streakCount++;
     G.streakType=G.selectedEffort;
@@ -1687,6 +1560,7 @@ async function onRollDice(){
   }
   G.lastEffort=G.selectedEffort;
 
+  // Streak bonus (3+ consecutive same effort)
   let streakMsg='';
   if(G.streakCount>=3){
     if(G.streakType==='conserve'){
@@ -1698,43 +1572,56 @@ async function onRollDice(){
     }
   }
 
+  // Apply shoes item
+  const shoesIdx=G.items.findIndex(i=>i.id==='shoes');
+  if(shoesIdx>=0){
+    tEff+=30;
+    G.items.splice(shoesIdx,1);
+  }
+
+  // Chained events
   let chainMsg='';
   if(G.lastEventBad && G.selectedEffort==='push'){
+    // Pushing after a bad event aggravates
     const penalty=Math.round(tEff<0? tEff*1.5 : -15);
     tEff+=penalty;
     chainMsg='⚠️ Blessure aggravée !';
   }
   if(G.lastEventBad===false && G.selectedEffort==='conserve' && event.time>0){
+    // Conserving after a good event amplifies
     tEff=Math.round(tEff*1.3);
     chainMsg='✨ Élan préservé !';
   }
+
   G.lastEventBad=event.time<0;
 
+  // Fatigue penalty
   const basePace=DATA.difficulties.find(d=>d.id===G.difficultyId).pace[G.distanceId];
   const fatigue=G.energy<50? Math.floor((50-Math.max(G.energy,0))/10)*2 : 0;
+  // Speed stat bonus: reduces base pace
   const speedReduction=speedBonus*3;
+  // Recovery stat bonus: reduces fatigue
   const recoveryBonus=G.isCareerRace?careerStatBonus('recovery'):0;
   const fatigueAfterRecovery=Math.max(0, fatigue - recoveryBonus*1.5);
   let pace=Math.max(160, basePace - tEff + fatigueAfterRecovery - speedReduction);
 
+  // Apply watch pace bonus
+  // (already applied above as dice boost)
+
+  // Energy cost with weather and strategy multipliers
   let energyCost=DATA.getEnergyCost(G.distanceId,G.difficultyId);
   if(w) energyCost*=w.energyCostMult;
   energyCost*=stratMult.energyCost;
+  // Endurance stat reduces energy cost
   energyCost=Math.max(1, energyCost - enduranceBonus*0.8);
 
-  // Phase 4: Item usage prompts
-  let shoesUsed=false;
-  const shoesIdx=G.items.findIndex(i=>i.id==='shoes');
-  if(shoesIdx>=0){
-    const use=await showItemPrompt('👟','Utiliser les chaussures ?','+30s sur ce kilomètre');
-    if(use){tEff+=30;G.items.splice(shoesIdx,1);shoesUsed=true;}
-  }
-
+  // Apply gel item
   let gelUsed=false;
   const gelIdx=G.items.findIndex(i=>i.id==='gel');
   if(gelIdx>=0 && G.energy<60){
-    const use=await showItemPrompt('🧃','Boire un gel ?','+20 ⚡ énergie');
-    if(use){G.energy=Math.min(100,G.energy+20);G.items.splice(gelIdx,1);gelUsed=true;}
+    G.energy=Math.min(100,G.energy+20);
+    G.items.splice(gelIdx,1);
+    gelUsed=true;
   }
 
   // Apply
@@ -1743,15 +1630,23 @@ async function onRollDice(){
   G.totalTime+=pace;
   G.energy=Math.max(0,Math.min(100, G.energy - Math.round(energyCost) + eEff));
 
+  // Record split
   G.splits.push({km:G.km, time:G.totalTime, pace, event:event.name});
+
   G.history.push({km:G.km,event,timeEffect:tEff,energyEffect:eEff,pace,fatigue,chainMsg,streakMsg,shieldUsed,gelUsed});
 
+  // Update momentum
   const momDelta=event.time>0?12:event.time<0?-8:2;
   G.momentum=Math.max(0,Math.min(100,G.momentum+momDelta));
 
+  // Update UI after a beat
   await new Promise(r=>setTimeout(r,400));
 
-  // Phase 5: Show effects on event card
+  // Show event card
+  const ec=document.getElementById('event-card');
+  document.getElementById('e-emoji').textContent=event.emoji;
+  document.getElementById('e-name').textContent=event.name+(shieldUsed?' 🛡️':'');
+  document.getElementById('e-desc').textContent=event.desc+(gelUsed?' 🧃':'');
   const effEl=document.getElementById('e-effects');
   effEl.innerHTML='';
   const teC=tEff>=0?'good':'bad';
@@ -1772,15 +1667,14 @@ async function onRollDice(){
   if(G.streakCount>=3 && streakMsg){
     effEl.innerHTML+=`<span class="e-effect neutral">${streakMsg}</span>`;
   }
+  // Weather display in event
   if(w){
     effEl.innerHTML+=`<span class="e-effect neutral">${w.icon}</span>`;
   }
-  if(shoesUsed){
-    effEl.innerHTML+=`<span class="e-effect neutral">👟 +30s</span>`;
-  }
-  if(gelUsed){
-    effEl.innerHTML+=`<span class="e-effect neutral">🧃 +20⚡</span>`;
-  }
+  ec.classList.remove('show');
+  // Force reflow to restart animation
+  void ec.offsetWidth;
+  ec.classList.add('show');
 
   updateRaceUI(prevTime);
   updateRoad();
@@ -1788,17 +1682,7 @@ async function onRollDice(){
 
   addJournalEntry(G.km,event.name,event.emoji,tEff,G.km===1);
 
-  // Sprint minigame (last 2 km before finish)
-  if(G.km >= G.totalKm - 2 && G.km < G.totalKm){
-    const sprintClicks=await showSprintMinigame();
-    if(sprintClicks>0){
-      G.totalTime-=sprintClicks;
-      updateRaceUI();
-      addJournalEntry(G.km,`💨 Sprint! ${sprintClicks}s gagnées`,'🏃',0,true);
-    }
-  }
-
-  // Random item drop
+  // Random item drop (20% chance)
   if(Math.random()<.2 && G.items.length<4){
     const itemPool=DATA.items;
     const randItem=itemPool[Math.floor(Math.random()*itemPool.length)];
@@ -1814,7 +1698,7 @@ async function onRollDice(){
     aiRenderOnRoad();
   }
 
-  // Water station (every 5km)
+  // Water station check (every 5km, not at start)
   const hasWaterStation = G.km >= 5 && G.km % 5 === 0 && G.km !== G._lastWaterKm && G.km < G.totalKm;
   if(hasWaterStation && G.isCareerRace){
     G._lastWaterKm = G.km;
@@ -1823,17 +1707,19 @@ async function onRollDice(){
       G.energy = Math.min(100, G.energy + 15 + recoveryBonus*2);
       updateRaceUI();
     } else if(result === 'sprint'){
-      G.totalTime -= 30;
+      G.totalTime -= 30; // gain 30s
       updateRaceUI();
     }
+    // else skip = nothing
   }
 
-  // Choice popup (every 3km instead of random 20%)
-  if(G.km % 3 === 0 && G.km < G.totalKm && MP.mode!=='multi'){
+  // Choice popup (20% chance, not on final km, not in multiplayer)
+  if(Math.random()<.2 && G.km<G.totalKm && MP.mode!=='multi'){
     const isBad=event.time<0;
     const choice=await showChoicePopup(isBad);
     if(choice==='risky'){
       if(Math.random()<.5){
+        // Success
         if(isBad){
           G.totalTime+=Math.round(Math.abs(tEff)*.6);
         } else {
@@ -1842,6 +1728,7 @@ async function onRollDice(){
         updateRaceUI();
         addJournalEntry(G.km,'✅ Risque réussi!','🎯',0,true);
       } else {
+        // Fail
         if(isBad){
           G.totalTime-=Math.round(Math.abs(tEff)*.5);
         } else {
@@ -1862,7 +1749,7 @@ async function onRollDice(){
     return;
   }
 
-  // Countdown for next roll
+  // Start countdown for next roll
   G.isRolling=false;
   startCountdown();
 }
@@ -2024,6 +1911,9 @@ document.addEventListener('click',e=>{
     stratBtn.classList.add('selected');
     return;
   }
+
+  const effortBtn=e.target.closest('.btn-effort');
+  if(effortBtn){onEffortClick(e);return;}
 
   const startBtn=e.target.closest('#btn-start');
   if(startBtn&&!startBtn.disabled&&G.screen==='select'){startRace();return;}
