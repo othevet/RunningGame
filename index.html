@@ -1832,11 +1832,20 @@ function showFinish(){
       ${CAREER._justLeveledUp ? lvlUpHtml : ''}
     `;
     document.getElementById('btn-shop-after').style.display = '';
+    document.getElementById('btn-shop-after').style.background = 'red';
+    document.getElementById('btn-shop-after').style.color = 'white';
+    document.getElementById('btn-shop-after').style.border = '3px solid yellow';
     CAREER._justLeveledUp = false;
   } else {
     rwEl.style.display = 'none';
     document.getElementById('btn-shop-after').style.display = 'none';
   }
+
+  // TEMP DEBUG: always show shop button
+  document.getElementById('btn-shop-after').style.display = 'block';
+  document.getElementById('btn-shop-after').style.background = 'red';
+  document.getElementById('btn-shop-after').style.color = 'white';
+  document.getElementById('btn-shop-after').style.border = '3px solid yellow';
 
   // Stats
   const avgPace=G.totalKm>0? G.totalTime/G.totalKm : 0;
