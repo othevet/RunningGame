@@ -1007,6 +1007,7 @@ function careerStatBonus(stat){
 }
 
 function careerRenderHome(){
+  careerInit();
   document.getElementById('career-level-num').textContent = CAREER.level;
   document.getElementById('career-lvl-display').textContent = CAREER.level;
   const needed = careerXpForNext();
@@ -1791,6 +1792,7 @@ function showFinish(){
     rewards = careerCalcRewards(rank, G.distanceId, G.difficultyId);
     careerAddXp(rewards.xp);
     careerAddMoney(rewards.money);
+    careerSave(); // force save after race
     CAREER.xpEarned = rewards.xp;
     CAREER.moneyEarned = rewards.money;
     CAREER.rank = rank;
